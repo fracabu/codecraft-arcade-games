@@ -99,4 +99,12 @@ Phaser entra in cache alla prima partita di Fascia d'Asteroidi.
 - I due giochi di satira caricano Phaser 3 da cdnjs e un font da Google Fonts: non vanno offline.
 
 ## 6. Pubblicazione
-Vedi sotto (aggiornato dopo il deploy).
+- **https://arcade-nerd.pages.dev/** · Cloudflare Pages, progetto `arcade-nerd`, branch `main`, 20/11/2026,
+  82 file (versione cache `c1e01f686a`).
+- Progetto creato con `wrangler pages project create arcade-nerd --production-branch main --force`: senza
+  `--force` wrangler 4.165 prova a passare a Workers e fallisce (come già scritto in
+  `threejs-app/FLUSSO-OPERATIVO-THREEJS.md`). Le pubblicazioni successive non vogliono `--force`.
+- Prova sul sito pubblicato (`node strumenti/prova.mjs --veloce --base https://arcade-nerd.pages.dev/`):
+  **32 su 32**: home e 6 giochi alle quattro misure di schermo, senza errori. Intestazioni `_headers` attive
+  (`nosniff`, `sw.js` in `no-cache`). Il link al Gufo risponde 200.
+- Nessun push su GitHub: il repo è solo locale.
