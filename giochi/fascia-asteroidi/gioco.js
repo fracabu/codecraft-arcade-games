@@ -280,7 +280,7 @@ class Gioco extends Phaser.Scene {
   }
 
   update(time, delta) {
-    const dt = Math.min(delta, 50) / 1000;
+    const dt = Math.min(delta, 100) / 1000;
     const { width: w, height: h } = this.scale;
     for (const s of this.stelle) {
       s.y += s.v * dt * (this.r.fase === "gioco" ? 1 + this.r.tempo * 0.02 : 1);
@@ -329,6 +329,9 @@ class Gioco extends Phaser.Scene {
 }
 
 const game = new Phaser.Game({
+  // senza smoothStep il delta di update è il tempo vero: con smoothStep resta ~17 ms anche a 30 fps
+  // e su un telefono lento il gioco va al rallentatore (misurato: 29% della velocità con la CPU rallentata)
+  fps: { smoothStep: false },
   type: Phaser.AUTO,
   parent: "gioco",
   backgroundColor: "#05080a",

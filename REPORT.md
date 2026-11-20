@@ -119,3 +119,14 @@ Phaser entra in cache alla prima partita di Fascia d'Asteroidi.
   **32 su 32**: home e 6 giochi alle quattro misure di schermo, senza errori. Intestazioni `_headers` attive
   (`nosniff`, `sw.js` in `no-cache`). Il link al Gufo risponde 200.
 - Nessun push su GitHub: il repo è solo locale.
+
+### 20/11/2026, notte: Mainframe e nuovo indirizzo
+- **https://codecraft-arcade-games.pages.dev/** · progetto Cloudflare Pages `codecraft-arcade-games`
+  (creato anche lui con `--force`), 89 file, versione cache `00e575e47e`. Prova sul sito pubblicato: **40 su 40**.
+  Il vecchio `arcade-nerd.pages.dev` è ancora online con la v0.1 senza Mainframe: non è stato toccato.
+- Repo **privato** su GitHub: https://github.com/fracabu/codecraft-arcade-games
+- Footer della home: "sviluppato da codecraft" col logo del sito (SVG del Colosseo con l'arco arancio, preso
+  da `codecraft-studio/src/components/common/LogoCodecraft.vue`) e link a https://www.codecraft.it.
+- **Mainframe** (`/platform`): collaudo locale **65 su 65**, con camminata, scala, salto della bobina e spina
+  staccata da tastiera vera; croce e SALTA col dito. Con la GPU vera: 60 fps fissi.
+- Anche Mainframe non è ancora stato provato da una persona su un telefono vero.

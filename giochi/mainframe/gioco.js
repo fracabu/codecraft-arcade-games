@@ -465,6 +465,9 @@ class Gioco extends Phaser.Scene {
 }
 
 const game = new Phaser.Game({
+  // senza smoothStep il delta di update è il tempo vero: con smoothStep resta ~17 ms anche a 30 fps
+  // e su un telefono lento il gioco va al rallentatore (misurato: 29% della velocità con la CPU rallentata)
+  fps: { smoothStep: false },
   type: Phaser.AUTO,
   parent: "gioco",
   backgroundColor: "#05080a",
