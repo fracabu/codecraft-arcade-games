@@ -197,6 +197,69 @@ if (!VELOCE) {
     await page.close();
   }
 
+  // 6c. Mainframe: tastiera vera per camminare, salire, saltare una bobina e staccare la spina; poi tre colpi
+  {
+    const { page } = await apri(pc, "giochi/mainframe/");
+    await page.keyboard.press("Enter");
+    await page.evaluate(() => { GIOCO.quieto(); });
+    // il tasto resta giù finché succede la cosa attesa: così la prova non dipende dagli FPS di Chromium senza GPU
+    const tieni = async (tasto, condizione, arg) => {
+      await page.keyboard.down(tasto);
+      const fatto = await page.waitForFunction(condizione, arg, { timeout: 10000 }).then(() => true, () => false);
+      await page.keyboard.up(tasto);
+      return fatto;
+    };
+    const x0 = (await page.evaluate(() => GIOCO.stato())).x;
+    await tieni("ArrowRight", (x) => GIOCO.stato().x > x + 30, x0);
+    const st1 = await page.evaluate(() => GIOCO.stato());
+    ok("mainframe: con la freccia destra il sistemista cammina", st1.fase === "gioco" && st1.x > x0 + 30 && st1.g === 0, `${x0} → ${st1.x}`);
+    await page.evaluate(() => GIOCO.metti(400, 0));
+    await tieni("ArrowUp", () => GIOCO.stato().g === 1 && GIOCO.stato().omino === "terra");
+    const st2 = await page.evaluate(() => GIOCO.stato());
+    ok("mainframe: con la freccia su sale la scala", st2.g === 1 && st2.omino === "terra", JSON.stringify({ g: st2.g, omino: st2.omino }));
+    // il salto a passi fissi: la bobina arriva, Spazio vero sulla tastiera, il passo dopo si stacca
+    await page.evaluate(() => {
+      GIOCO.ferma(); GIOCO.metti(200, 0); GIOCO.bobina(330, 0, -1);
+      while (GIOCO.distanza() >= 28) GIOCO.passo(1);
+    });
+    await page.keyboard.press("Space");
+    const st3 = await page.evaluate(() => { GIOCO.passo(90); GIOCO.riprendi(); return GIOCO.stato(); });
+    ok("mainframe: Spazio salta la bobina e vale 100", st3.fase === "gioco" && st3.vite === 3 && st3.punti === 100, JSON.stringify({ fase: st3.fase, vite: st3.vite, punti: st3.punti }));
+    await page.evaluate(() => GIOCO.metti(240, 5));
+    await tieni("ArrowUp", () => GIOCO.stato().g === 6 && GIOCO.stato().omino === "terra");
+    await tieni("ArrowRight", () => GIOCO.stato().fase !== "gioco");
+    const st4 = await page.evaluate(() => GIOCO.stato());
+    ok("mainframe: in cima si stacca la spina e arriva il bonus", st4.fase === "vinto" && st4.punti > 100, JSON.stringify({ fase: st4.fase, punti: st4.punti }));
+    const liv2 = await page.waitForFunction(() => GIOCO.stato().livello === 2 && GIOCO.stato().fase === "gioco", null, { timeout: 5000 }).then(() => true, () => false);
+    ok("mainframe: poi si passa al livello 2", liv2);
+    const vite = (await page.evaluate(() => GIOCO.stato())).vite;   // 3, se i punti non hanno già dato la vita extra dei 7000
+    for (let i = 0; i < vite; i++) {
+      await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 5000 }).catch(() => {});
+      await page.evaluate(() => GIOCO.colpisci());
+      await page.waitForTimeout(200);
+    }
+    const fp = await page.waitForSelector(".fp", { timeout: 5000 }).then(() => true, () => false);
+    ok(`mainframe: perse tutte le vite (${vite}) la partita finisce`, fp && vite === 3, `vite all inizio: ${vite}`);
+    await page.close();
+  }
+  // 6d. Mainframe sul telefono: croce a schermo e tasto SALTA
+  {
+    const { page } = await apri(tel, "giochi/mainframe/");
+    const b = await page.locator(".croce").boundingBox();
+    const evento = (sel, tipo, x, y) => page.locator(sel).dispatchEvent(tipo, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x, clientY: y });
+    await evento(".croce", "pointerdown", b.x + b.width / 2 + 50, b.y + b.height / 2);
+    await page.waitForFunction(() => GIOCO.stato().x > 90, null, { timeout: 10000 }).catch(() => {});
+    await evento(".croce", "pointerup", b.x + b.width / 2 + 50, b.y + b.height / 2);
+    const st = await page.evaluate(() => GIOCO.stato());
+    ok("mainframe: la croce a schermo fa partire e camminare", st.fase === "gioco" && st.x > 90, JSON.stringify({ fase: st.fase, x: st.x }));
+    await page.evaluate(() => GIOCO.quieto());
+    await evento(".salta", "pointerdown", 0, 0);
+    const salta = await page.waitForFunction(() => GIOCO.stato().omino === "aria", null, { polling: "raf", timeout: 3000 }).then(() => true, () => false);
+    await evento(".salta", "pointerup", 0, 0);
+    ok("mainframe: il tasto SALTA fa saltare", salta);
+    await page.close();
+  }
+
   // 7. FPS dell'arcade con la CPU rallentata 4 volte
   {
     const { page } = await apri(tel, "giochi/fascia-asteroidi/");
@@ -238,6 +301,10 @@ if (ANTEPRIME) {
     "cache-miss": async (p) => { await p.evaluate(() => { GIOCO.avvia("A"); GIOCO.ferma(); for (let i = 0; i < 7; i++) GIOCO.passo(); GIOCO.ferma(); }); },
     "bug-bash": async (p) => { await p.evaluate(() => { GIOCO.avvia("A"); GIOCO.ferma(); for (let i = 0; i < 5; i++) GIOCO.passo(); GIOCO.ferma(); }); },
     "luna-park": async (p) => { await p.evaluate(() => GIOCO.avvia()); await p.waitForTimeout(2600); },
+    "mainframe": async (p) => {
+      await p.evaluate(() => { GIOCO.avvia(); GIOCO.ferma(); GIOCO.tempo(); GIOCO.metti(210, 6); GIOCO.passo(60 * 9); GIOCO.metti(200, 4); GIOCO.tempo(4200); GIOCO.passo(1); });
+      await p.waitForTimeout(300);
+    },
     "il-25": async (p) => { await p.waitForTimeout(1500); },
     "grande-circo": async (p) => { await p.waitForTimeout(2500); },
   };
@@ -250,6 +317,12 @@ if (ANTEPRIME) {
       await page.setViewportSize({ width: 900, height: 560 });
       await page.waitForTimeout(200);
       await page.locator("svg.lcd").screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72 });
+      await page.setViewportSize({ width: 640, height: 360 });
+    } else if (g.slug === "mainframe") {
+      // gioco in verticale: della cartuccia si mostra la parte alta, mainframe e prime travi
+      await page.setViewportSize({ width: 640, height: 854 });
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72, clip: { x: 0, y: 53, width: 640, height: 360 } });
       await page.setViewportSize({ width: 640, height: 360 });
     } else {
       await page.screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72 });

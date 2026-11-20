@@ -127,6 +127,17 @@
       "stato": "pronto"
     },
     {
+      "slug": "mainframe",
+      "titolo": "Mainframe",
+      "categoria": "platform",
+      "descrizione": "Il mainframe del piano -2 è impazzito e fa rotolare bobine di nastro giù per l'impalcatura. Salta, prendi la chiavetta per formattarle, in cima stacca la spina.",
+      "url": "giochi/mainframe/",
+      "comandi": "frecce o WASD, Spazio salta · croce e SALTA a schermo",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
       "slug": "parola-del-giorno",
       "titolo": "Parola del Giorno",
       "categoria": "puzzle",

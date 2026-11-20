@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mainframe — arcade.nerd</title>
+<meta name="description" content="Il mainframe del piano -2 è impazzito e fa rotolare bobine di nastro giù per l'impalcatura: sali, salta, stacca la spina. Platform gratuito per PC e telefono.">
+<meta name="theme-color" content="#05080a">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icone/icona.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../comune/gioco.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #05080a; overflow: hidden; overscroll-behavior: none; }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #gioco { position: fixed; inset: 0; }
+  canvas { display: block; touch-action: none; }
+  /* sul telefono il gioco lascia posto ai comandi: sotto in verticale, ai lati in orizzontale */
+  body.tocco #gioco { top: 64px; bottom: 190px; }
+  @media (orientation: landscape) { body.tocco #gioco { top: 0; bottom: 0; left: 180px; right: 180px; } }
+  .comandi { display: none; }
+  body.tocco .comandi { display: block; }
+  .croce, .salta { position: fixed; z-index: 4; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .croce {
+    left: max(16px, env(safe-area-inset-left)); bottom: max(20px, env(safe-area-inset-bottom));
+    width: 150px; height: 150px; border-radius: 50%;
+    border: 2px solid #24432d; background: rgba(57, 255, 136, .06);
+  }
+  .croce span {
+    position: absolute; width: 44px; height: 44px; display: grid; place-items: center;
+    font: 20px/1 var(--g-mono); color: var(--g-verde); border-radius: 8px; pointer-events: none;
+  }
+  .croce .su { top: 6px; left: 51px; } .croce .giu { bottom: 6px; left: 51px; }
+  .croce .sx { left: 6px; top: 51px; } .croce .dx { right: 6px; top: 51px; }
+  .croce.sx .sx, .croce.dx .dx, .croce.su .su, .croce.giu .giu { background: var(--g-verde); color: #04140a; }
+  .salta {
+    right: max(16px, env(safe-area-inset-right)); bottom: max(40px, env(safe-area-inset-bottom));
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 2px solid var(--g-ambra); background: rgba(255, 176, 0, .08); color: var(--g-ambra);
+    font: bold 16px var(--g-mono); letter-spacing: .06em; padding: 0;
+  }
+  .salta.premuto { background: var(--g-ambra); color: #000; }
+</style>
+</head>
+<body>
+<a class="torna" href="../../">&larr; sala giochi</a>
+<div id="gioco"></div>
+<div class="comandi">
+  <div class="croce" aria-label="croce direzionale"><span class="su">▲</span><span class="sx">◀</span><span class="dx">▶</span><span class="giu">▼</span></div>
+  <button type="button" class="salta" aria-label="salta">SALTA</button>
+</div>
+<script src="../../vendor/phaser-4.2.1.min.js"></script>
+<script type="module" src="gioco.js"></script>
+</body>
+</html>
