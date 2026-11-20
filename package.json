@@ -2,6 +2,7 @@
   "name": "arcade-nerd",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Sala giochi online: giochi leggeri per PC e telefono, divisi per categoria.",
   "type": "module",
   "scripts": {

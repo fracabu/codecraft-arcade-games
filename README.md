@@ -63,3 +63,8 @@ Due cose imparate lì, valide per ogni gioco Phaser 4 del repo:
 - `vendor/phaser-4.2.1.min.js`: Phaser in locale (serve all'offline)
 - `strumenti/`: server, collaudo, icone, preparazione di `dist/`
 - `.claude/skills/`: skill di `gamedev-skills/awesome-gamedev-agent-skills` usate per costruire i giochi
+
+## Licenza
+Codice dei giochi e della sala: [MIT](LICENSE), © 2026 codecraft.
+Fanno eccezione e restano con la loro licenza: `vendor/phaser-4.2.1.min.js` (Phaser, MIT, Phaser Studio Inc., avviso in `vendor/LICENSE-phaser.md`)
+e `.claude/skills/` (Apache-2.0, vedi `.claude/skills/NOTICE.md`).
