@@ -176,6 +176,27 @@ if (!VELOCE) {
     await page.close();
   }
 
+  // 6b. Luna Park: un round intero giocato col mouse, mirando ai bersagli; poi un colpo a vuoto
+  {
+    const { page } = await apri(pc, "giochi/luna-park/");
+    await page.mouse.click(640, 300);                       // inizia
+    const scadenza = Date.now() + 60000;
+    let st = await page.evaluate(() => GIOCO.stato());
+    while (Date.now() < scadenza && st.round === 1 && st.fase !== "fine") {
+      const b = (await page.evaluate(() => GIOCO.bersagli()))[0];
+      if (b && st.fase === "volo" && st.colpi > 0) await page.mouse.click(b.x, b.y);
+      await page.waitForTimeout(120);
+      st = await page.evaluate(() => GIOCO.stato());
+    }
+    ok("luna-park: mirando ai bersagli col mouse si supera il round 1", st.round === 2, JSON.stringify({ round: st.round, punti: st.punti }));
+    await page.waitForFunction(() => GIOCO.stato().fase === "volo", null, { timeout: 8000 }).catch(() => {});
+    const prima = await page.evaluate(() => GIOCO.stato().colpi);
+    await page.mouse.click(5, 300);
+    const dopo = await page.evaluate(() => GIOCO.stato());
+    ok("luna-park: un colpo a vuoto consuma una cartuccia e non fa punti", dopo.colpi === prima - 1 && dopo.esiti.split(",").every((e) => e !== "ok"), `${prima} → ${dopo.colpi}`);
+    await page.close();
+  }
+
   // 7. FPS dell'arcade con la CPU rallentata 4 volte
   {
     const { page } = await apri(tel, "giochi/fascia-asteroidi/");
@@ -216,6 +237,7 @@ if (ANTEPRIME) {
     "fascia-asteroidi": async (p) => { await p.evaluate(() => GIOCO.avvia()); await p.waitForTimeout(4500); },
     "cache-miss": async (p) => { await p.evaluate(() => { GIOCO.avvia("A"); GIOCO.ferma(); for (let i = 0; i < 7; i++) GIOCO.passo(); GIOCO.ferma(); }); },
     "bug-bash": async (p) => { await p.evaluate(() => { GIOCO.avvia("A"); GIOCO.ferma(); for (let i = 0; i < 5; i++) GIOCO.passo(); GIOCO.ferma(); }); },
+    "luna-park": async (p) => { await p.evaluate(() => GIOCO.avvia()); await p.waitForTimeout(2600); },
     "il-25": async (p) => { await p.waitForTimeout(1500); },
     "grande-circo": async (p) => { await p.waitForTimeout(2500); },
   };

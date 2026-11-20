@@ -116,6 +116,17 @@
       "stato": "pronto"
     },
     {
+      "slug": "luna-park",
+      "titolo": "Luna Park",
+      "categoria": "tiro",
+      "descrizione": "Il baraccone del tiro di un luna park nerd: floppy volanti, piccioni di latta e una rara chiavetta d'oro. Tre colpi per volo, ne servono 6 su 10.",
+      "url": "giochi/luna-park/",
+      "comandi": "mouse: mira e clicca · frecce + Spazio · col dito: tocca",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
       "slug": "parola-del-giorno",
       "titolo": "Parola del Giorno",
       "categoria": "puzzle",
@@ -162,13 +173,6 @@
       "titolo": "Vicoli",
       "categoria": "corsa",
       "descrizione": "Un rider in bici fra tre corsie di vicoli, si scorre col dito.",
-      "stato": "in-arrivo"
-    },
-    {
-      "slug": "luna-park",
-      "titolo": "Luna Park",
-      "categoria": "tiro",
-      "descrizione": "Floppy e piccioni di latta: tocca lo schermo e colpisci.",
       "stato": "in-arrivo"
     },
     {

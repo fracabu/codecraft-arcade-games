@@ -56,12 +56,19 @@ siti di giochi web (Poki, CrazyGames) i dati sono deboli e si contraddicono: puz
 - **Il Gufo Enigmista** (`/platform`): cartuccia che apre https://gufo-enigmista.pages.dev/ (resta sul suo sito
   con contatore e privacy propri).
 - **Classifica locale** per ogni gioco: top 10 nel `localStorage`, iniziali a 3 lettere. Nessun dato esce dal dispositivo.
+- **Luna Park** (`/tiro`, aggiunto il 20/11 su richiesta "fai tipo duck hunt"): tiro al bersaglio a volo nel
+  baraccone di un luna park nerd di notte. Bersagli nostri: floppy volanti, piccioni di latta, una rara chiavetta
+  USB d'oro (500 punti). 3 colpi per volo, 10 bersagli per round, ne servono 6 (7 dal round 3, 8 dal round 6);
+  dal round 3 volano in coppia; round perfetto = bonus. Un robottino gestore commenta da dietro il bancone.
+  Mirino col mouse (o frecce + Spazio), col dito si tocca (tolleranza più larga). Feedback secondo la skill
+  game-feel: colpo = suono e lampo; bersaglio colpito = pausa di 50 ms, coriandoli, numero che sale, scossa
+  leggera; chiavetta d'oro = versione grande.
 - **In arrivo** (cartucce già visibili): Parola del Giorno, Kilobyte, Circuiti, Drone, Cavo, Firewall,
-  Vicoli, Luna Park (tiro al bersaglio), Salto Quantico (platform).
+  Vicoli, Salto Quantico (platform).
 
 ## 3. Collaudo
 `node strumenti/prova.mjs --base http://127.0.0.1:5491/` sulla cartella `dist/` (quella che si pubblica),
-Chromium di Playwright 1.64.1: **47 prove su 47 passate**.
+Chromium di Playwright 1.64.1: **47 prove su 47 passate** nella v0.1; **53 su 53** dopo l'aggiunta di Luna Park.
 - Home e 6 giochi locali a 390x844 (telefono touch), 844x390 (telefono orizzontale), 768x1024 (tablet),
   1440x900 (PC): si aprono senza errori in pagina, console o rete; la home senza scroll orizzontale.
   Scatti in `_scatti/` (non versionati).
@@ -72,6 +79,10 @@ Chromium di Playwright 1.64.1: **47 prove su 47 passate**.
   (6 colpi in un secondo).
 - Cache Miss: il tasto a schermo sposta il sistemista; un pacchetto perso è un errore; uno preso fa punto.
 - Bug Bash: frecce e Spazio da tastiera schiacciano un bug.
+- Luna Park: un round intero giocato col mouse vero, mirando ai bersagli in volo, porta al round 2
+  (2.050 punti col bonus del round perfetto); un colpo a vuoto consuma una cartuccia e non fa punti.
+  Corretti dopo gli scatti: fumetto del robot fuori schermo; cartello iniziale troppo grande sul telefono
+  in orizzontale.
 - Offline: dopo una visita, a rete staccata si aprono la home e Cache Miss.
 - **FPS**: Fascia d'Asteroidi con la CPU rallentata 4x in Chromium headless (WebGL software, senza GPU)
   ha dato fra 31 e 56 FPS a seconda del giro. Il numero non dice molto su un telefono vero, che ha la GPU:
