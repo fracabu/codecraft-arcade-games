@@ -1,5 +1,5 @@
 // Prepara dist/ con i soli file da pubblicare, timbra la versione del service worker e stampa i pesi.
-// Uso: node strumenti/prepara_dist.mjs   poi   npx wrangler pages deploy dist --project-name arcade-nerd --branch main
+// Uso: node strumenti/prepara_dist.mjs   poi   npx wrangler pages deploy dist --project-name codecraft-arcade-games --branch main
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join, relative } from "node:path";

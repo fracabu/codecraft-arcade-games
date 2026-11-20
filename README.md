@@ -2,7 +2,27 @@
 
 Sala giochi online "da nerd": giochi leggeri per PC e telefono, divisi per categoria, installabile come
 web app e giocabile anche offline. Niente framework, niente account, niente tracciamento: HTML, CSS e
-JavaScript; Phaser 4.2.1 solo per l'arcade.
+JavaScript; Phaser 4.2.1 solo per arcade e platform.
+
+**Si gioca qui: https://codecraft-arcade-games.pages.dev/**
+
+Sviluppato da [codecraft](https://www.codecraft.it).
+
+## I giochi
+
+| gioco | categoria | come si gioca |
+|---|---|---|
+| Incastro 8x8 | puzzle | trascina i pezzi, riempi righe e colonne |
+| Fascia d'Asteroidi | arcade | schiva e spara in un campo di sassi che accelera |
+| Cache Miss | lcd | il sistemista prende al volo i pacchetti di quattro server |
+| Bug Bash | lcd | schiaccia i bug prima che arrivino in produzione |
+| Luna Park | tiro | floppy volanti e piccioni di latta, tre colpi per volo |
+| Mainframe | platform | sali l'impalcatura, salta le bobine di nastro, in cima stacca la spina |
+| Il Gufo Enigmista | platform | platform con enigmi, si apre sul suo sito |
+| Il 25% · Il Grande Circo | satira | i giochi di Fermo Posta sui fatti veri |
+
+Ogni gioco tiene una classifica locale (top 10, solo nel dispositivo: nessun dato esce).
+Comandi: tastiera sul PC, tasti o gesti a schermo sul telefono.
 
 ## Provare in locale
 ```
@@ -14,8 +34,9 @@ node strumenti/prova.mjs         # collaudo completo (serve il server acceso); -
 ## Pubblicare (Cloudflare Pages)
 ```
 node strumenti/prepara_dist.mjs  # copia in dist/ i soli file pubblici e timbra la versione della cache
-npx wrangler pages deploy dist --project-name arcade-nerd --branch main
+npx wrangler pages deploy dist --project-name codecraft-arcade-games --branch main
 ```
+Oppure `npm run deploy`, che fa le due cose in fila.
 
 ## Aggiungere un gioco
 1. Una cartella `giochi/<slug>/` con `index.html` autosufficiente (link `../../` per tornare alla sala,
@@ -26,6 +47,13 @@ npx wrangler pages deploy dist --project-name arcade-nerd --branch main
 
 Un gioco LCD si fa con `lcd/motore.js`: si descrivono segmenti e regole (`disegna`, `nuovaPartita`, `passo`,
 `tasto`), il motore fa guscio, ritmo, punteggio, errori, bip e fine partita. Esempi: `giochi/cache-miss/`, `giochi/bug-bash/`.
+
+Mainframe separa il mondo dal disegno: `giochi/mainframe/regole.js` (travi inclinate, scale, bobine, punti,
+a passo fisso di 1/60 s) non conosce Phaser e si prova anche in Node; `gioco.js` disegna, suona e legge i comandi.
+Due cose imparate lì, valide per ogni gioco Phaser 4 del repo:
+- il `delta` che Phaser passa a `update` resta ~17 ms anche quando i fotogrammi calano: il tempo di gioco
+  va misurato con `performance.now()`, altrimenti sui telefoni lenti si gioca al rallentatore;
+- quello che non si muove va disegnato una volta (canvas 2D → texture), non con un `Graphics` ridisegnato a ogni fotogramma.
 
 ## Struttura
 - `index.html`, `stile.css`, `hub.js`, `catalogo.json`: la home

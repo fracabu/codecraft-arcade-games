@@ -8,7 +8,7 @@
     "serve": "node strumenti/serve.mjs",
     "prova": "node strumenti/prova.mjs",
     "dist": "node strumenti/prepara_dist.mjs",
-    "deploy": "node strumenti/prepara_dist.mjs && npx wrangler pages deploy dist --project-name arcade-nerd --branch main"
+    "deploy": "node strumenti/prepara_dist.mjs && npx wrangler pages deploy dist --project-name codecraft-arcade-games --branch main"
   },
   "devDependencies": {
     "phaser": "4.2.1",

@@ -1,5 +1,5 @@
 # Progetto Cloudflare Pages di arcade.nerd.
-# Pubblicazione: node strumenti/prepara_dist.mjs && npx wrangler pages deploy dist --project-name arcade-nerd --branch main
-name = "arcade-nerd"
+# Pubblicazione: node strumenti/prepara_dist.mjs && npx wrangler pages deploy dist --project-name codecraft-arcade-games --branch main
+name = "codecraft-arcade-games"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-11-01"
