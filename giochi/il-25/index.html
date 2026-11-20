@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Il 25%</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1b1b1b; overflow: hidden; }
+  #gioco { width: 100vw; height: 100vh; }
+  canvas { display: block; touch-action: none; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
+</head>
+<body>
+<div id="gioco"></div>
+<script>
+// Il 25% — prototipo di Fermo Posta. Satira su fatti veri: le frasi dei personaggi reali sono citazioni
+// testuali (episodi/nvidia-spia/fonti.md) o caratteri a caso. Figure provvisorie disegnate dal codice:
+// verranno sostituite dalle pose fatte con Nano.
+
+const W = 960, H = 540, SUOLO = 460;
+const VIDEO = "https://www.youtube.com/@FermoPosta";
+const TELEGRAM = "https://t.me/FermoPostaTV";
+const INK = "#222222";
+
+const LIVELLI = [
+  { nome: "1. SANTA CLARA", sotto: "Sede Nvidia: raccogli le casse di chip H200",
+    cielo: "#ffd9a0", citta: "#e0a060", terra: "#b8875a", lung: 8000, vel: 290, buchi: 0.2, spie: 0.35, dogane: 2,
+    arrivo: "MAGAZZINO" },
+  { nome: "2. WASHINGTON", sotto: "La Casa Bianca dice sì agli H200. Con una condizione.",
+    cielo: "#cfe3f2", citta: "#8aa9c4", terra: "#8c8c8c", lung: 10000, vel: 330, buchi: 0.27, spie: 0.5, dogane: 3,
+    arrivo: "TIMBRO" },
+  { nome: "3. IL PORTO", sotto: "Destinazione: \"approved customers\"",
+    cielo: "#c9b6e4", citta: "#7d6ba0", terra: "#6b5a4a", lung: 12000, vel: 370, buchi: 0.32, spie: 0.65, dogane: 3,
+    arrivo: "APPROVED CUSTOMERS" },
+];
+
+// Citazioni testuali, con la fonte breve (dettagli in fonti.md)
+const DOGANA_FRASE = "\"$25% will be paid to the\nUnited States of America\"";
+const DOGANA_FONTE = "Trump, 8/12/2025";
+
+function statoIniziale() {
+  return { livello: 0, vite: 3, casse: 0, raccolte: 0, consegnate: 0, aTrump: 0, aSpie: 0, burroni: 0, timbrate: 0 };
+}
+
+// ---------- suoni (WebAudio, nessun file) ----------
+let AC = null;
+function suono(freq, dur, tipo = "square", vol = 0.06, slide = 0) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = tipo; o.frequency.value = freq;
+    if (slide) o.frequency.linearRampToValueAtTime(freq + slide, AC.currentTime + dur);
+    g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + dur);
+  } catch (e) { /* audio non disponibile */ }
+}
+const SFX = {
+  salto: () => suono(420, 0.15, "square", 0.05, 300),
+  cassa: () => { suono(880, 0.08); setTimeout(() => suono(1320, 0.1), 70); },
+  timbro: () => suono(120, 0.2, "sawtooth", 0.09, -60),
+  furto: () => suono(600, 0.3, "triangle", 0.08, -400),
+  dogana: () => { suono(1046, 0.1, "square", 0.06); setTimeout(() => suono(1318, 0.25, "square", 0.06), 100); },
+  caduta: () => suono(500, 0.6, "triangle", 0.08, -450),
+  arrivo: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => suono(f, 0.18), i * 110)),
+};
+
+// ---------- texture disegnate su canvas ----------
+function tela(scene, key, w, h, disegna) {
+  if (scene.textures.exists(key)) return;
+  const t = scene.textures.createCanvas(key, w, h);
+  const c = t.getContext();
+  c.lineCap = "round"; c.lineJoin = "round";
+  disegna(c, w, h);
+  t.refresh();
+}
+
+function linea(c, x1, y1, x2, y2, sp = 5) {
+  c.strokeStyle = INK; c.lineWidth = sp; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+}
+
+// Omino: testa bianca tonda, corpo colorato, gambe e braccia a linea. Guarda a destra.
+// posa: 0 e 1 corsa, 2 salto, 3 fermo
+function omino(c, corpo, posa, extra) {
+  // ombra
+  c.fillStyle = "rgba(0,0,0,0.18)"; c.beginPath(); c.ellipse(26, 77, 16, 4, 0, 0, Math.PI * 2); c.fill();
+  if (posa === 0) { linea(c, 22, 52, 12, 74); linea(c, 30, 52, 38, 74); }
+  else if (posa === 1) { linea(c, 22, 52, 28, 74); linea(c, 30, 52, 22, 74); }
+  else if (posa === 2) { linea(c, 22, 52, 12, 64); linea(c, 30, 52, 42, 62); }
+  else { linea(c, 22, 52, 20, 74); linea(c, 30, 52, 32, 74); }
+  c.fillStyle = corpo; c.strokeStyle = INK; c.lineWidth = 3;
+  c.beginPath(); c.roundRect(13, 28, 26, 28, 7); c.fill(); c.stroke();
+  if (posa === 2) { linea(c, 15, 34, 4, 22, 4); linea(c, 37, 34, 48, 22, 4); }
+  else if (posa === 3) { linea(c, 15, 34, 9, 50, 4); linea(c, 37, 34, 43, 50, 4); }
+  else { linea(c, 15, 34, 6, 46 + posa * 4, 4); linea(c, 37, 34, 46, 44 - posa * 4, 4); }
+  c.fillStyle = "#ffffff"; c.lineWidth = 3; c.beginPath(); c.arc(26, 16, 13, 0, Math.PI * 2); c.fill(); c.stroke();
+  c.fillStyle = INK; c.beginPath(); c.arc(30, 14, 2.2, 0, Math.PI * 2); c.arc(36, 14, 2.2, 0, Math.PI * 2); c.fill();
+  if (extra) extra(c, posa);
+}
+
+function creaTexture(scene) {
+  const POSE = [0, 1, 2, 3];
+  // Postino di Fermo Posta: cappello blu con visiera, borsa a tracolla
+  POSE.forEach(p => tela(scene, "postino" + p, 52, 82, c => omino(c, "#2b5fb3", p, c => {
+    c.fillStyle = "#1d3f7a"; c.beginPath(); c.roundRect(13, 2, 26, 9, 3); c.fill();
+    c.fillRect(30, 9, 14, 4);
+    c.fillStyle = "#ffd23f"; c.fillRect(22, 4, 6, 4);
+    c.fillStyle = "#8b5a2b"; c.strokeStyle = INK; c.lineWidth = 2;
+    c.beginPath(); c.roundRect(4, 40, 16, 13, 3); c.fill(); c.stroke();
+    linea(c, 12, 40, 36, 29, 2);
+  })));
+  // Spia: impermeabile, cappello a tesa, occhiali scuri, cartellino SPIA. Nessun tratto etnico.
+  POSE.forEach(p => tela(scene, "spia" + p, 52, 82, c => omino(c, "#c8a86b", p, c => {
+    c.fillStyle = "#2a2a2a"; c.fillRect(8, 3, 36, 4); c.beginPath(); c.roundRect(14, -4, 24, 10, 3); c.fill();
+    c.fillStyle = "#111"; c.beginPath(); c.roundRect(26, 11, 16, 6, 2); c.fill();
+    c.strokeStyle = "#8a6f3f"; c.lineWidth = 2; linea(c, 26, 28, 26, 55, 2);
+    c.fillStyle = "#fff"; c.strokeStyle = INK; c.lineWidth = 1.5; c.fillRect(28, 36, 10, 6); c.strokeRect(28, 36, 10, 6);
+  })));
+  // Trump: capelli gialli, abito blu, cravatta rossa lunga
+  tela(scene, "trump", 52, 82, c => omino(c, "#1f2a44", 3, c => {
+    c.fillStyle = "#f2c94c"; c.strokeStyle = INK; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(12, 12); c.quadraticCurveTo(20, -2, 42, 6); c.quadraticCurveTo(30, 6, 26, 10); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = "#d62828"; c.beginPath(); c.moveTo(24, 29); c.lineTo(28, 29); c.lineTo(29, 54); c.lineTo(23, 54); c.closePath(); c.fill();
+  }));
+  // Huang: giacca di pelle nera, capelli scuri
+  tela(scene, "huang", 52, 82, c => omino(c, "#151515", 3, c => {
+    c.fillStyle = "#2d2d2d"; c.beginPath(); c.arc(26, 10, 12, Math.PI, 0); c.fill();
+    c.strokeStyle = "#555"; c.lineWidth = 2; linea(c, 20, 30, 24, 50, 2);
+  }));
+  // Cassa di chip
+  tela(scene, "cassa", 36, 30, c => {
+    c.fillStyle = "#c48a4a"; c.strokeStyle = INK; c.lineWidth = 3;
+    c.beginPath(); c.roundRect(2, 2, 32, 26, 3); c.fill(); c.stroke();
+    linea(c, 2, 9, 34, 9, 2);
+    c.fillStyle = INK; c.font = "bold 10px Arial"; c.textAlign = "center"; c.fillText("H200", 18, 22);
+  });
+  // Dogana: due pali, insegna, sbarra
+  tela(scene, "dogana", 150, 300, c => {
+    c.fillStyle = "#555"; c.fillRect(12, 60, 14, 240); c.fillRect(124, 60, 14, 240);
+    c.fillStyle = "#d62828"; c.strokeStyle = INK; c.lineWidth = 4;
+    c.beginPath(); c.roundRect(2, 8, 146, 58, 6); c.fill(); c.stroke();
+    c.fillStyle = "#fff"; c.font = "bold 22px Impact, Arial Black, sans-serif"; c.textAlign = "center";
+    c.fillText("DOGANA", 75, 34); c.fillText("25%", 75, 58);
+    for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? "#fff" : "#d62828"; c.fillRect(26 + i * 16.3, 200, 16.3, 12); }
+  });
+  // Tetto galleggiante
+  tela(scene, "tetto", 64, 22, c => {
+    c.fillStyle = "#7a4a2a"; c.fillRect(0, 0, 64, 22);
+    c.fillStyle = "#9a6a42"; for (let i = 0; i < 4; i++) c.fillRect(i * 16 + 1, 2, 14, 7);
+    c.strokeStyle = INK; c.lineWidth = 3; c.strokeRect(0, 0, 64, 22);
+  });
+  // Livelli: terra, città sullo sfondo, arrivo
+  LIVELLI.forEach((L, i) => {
+    tela(scene, "terra" + i, 64, 90, c => {
+      c.fillStyle = "#d9d2c3"; c.fillRect(0, 0, 64, 14);
+      c.fillStyle = L.terra; c.fillRect(0, 14, 64, 76);
+      c.fillStyle = "rgba(0,0,0,0.15)"; for (let y = 24; y < 90; y += 18) c.fillRect((y / 18 % 2) * 32, y, 30, 3);
+      c.fillStyle = INK; c.fillRect(0, 12, 64, 3);
+    });
+    tela(scene, "citta" + i, 640, 260, c => {
+      let x = 0, s = i * 97 + 13;
+      const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+      while (x < 640) {
+        const w = 50 + rnd() * 70, h = 70 + rnd() * 170;
+        c.fillStyle = L.citta; c.fillRect(x, 260 - h, w, h);
+        c.fillStyle = "rgba(255,255,255,0.25)";
+        for (let wy = 260 - h + 12; wy < 250; wy += 22) for (let wx = x + 8; wx < x + w - 10; wx += 16) c.fillRect(wx, wy, 7, 10);
+        x += w + 4;
+      }
+    });
+    tela(scene, "arrivo" + i, 240, 280, c => {
+      c.fillStyle = "#f4efe6"; c.strokeStyle = INK; c.lineWidth = 4;
+      c.fillRect(10, 60, 220, 220); c.strokeRect(10, 60, 220, 220);
+      c.fillStyle = "#3b3b3b"; c.fillRect(90, 180, 60, 100);
+      c.fillStyle = "#ffd23f"; c.beginPath(); c.roundRect(0, 6, 240, 54, 6); c.fill(); c.stroke();
+      c.fillStyle = INK; c.textAlign = "center";
+      c.font = (L.arrivo.length > 10 ? "bold 19px" : "bold 28px") + " Impact, Arial Black, sans-serif";
+      c.fillText(L.arrivo, 120, 44);
+    });
+  });
+  tela(scene, "nuvola", 120, 50, c => {
+    c.fillStyle = "rgba(255,255,255,0.85)";
+    [[30, 30, 22], [60, 22, 26], [90, 30, 20]].forEach(([x, y, r]) => { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); });
+  });
+}
+
+function testo(scene, x, y, s, size, colore = "#ffffff", extra = {}) {
+  return scene.add.text(x, y, s, Object.assign({
+    fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: size + "px", color: colore,
+    stroke: "#222", strokeThickness: Math.max(3, size / 8), align: "center",
+  }, extra)).setOrigin(0.5);
+}
+
+// ---------- scena del titolo ----------
+class Titolo extends Phaser.Scene {
+  constructor() { super("Titolo"); }
+  create() {
+    creaTexture(this);
+    this.cameras.main.setBackgroundColor("#ffd9a0");
+    this.add.tileSprite(0, H - 330, W, 260, "citta0").setOrigin(0, 0);
+    this.add.tileSprite(0, SUOLO, W, 90, "terra0").setOrigin(0, 0);
+    testo(this, W / 2, 85, "IL 25%", 100, "#ffe13d");
+    testo(this, W / 2, 180, "Consegna le casse di chip. Salta le spie.\nAlla dogana, il 25% lo paghi comunque.", 26);
+    this.add.image(W / 2 - 160, SUOLO - 38, "huang").setScale(1.4);
+    this.add.image(W / 2 - 60, SUOLO - 38, "postino3").setScale(1.4);
+    this.add.image(W / 2 + 60, SUOLO - 38, "spia3").setScale(1.4).setFlipX(true);
+    this.add.image(W / 2 + 170, SUOLO - 38, "trump").setScale(1.4).setFlipX(true);
+    const via = testo(this, W / 2, 265, "TOCCA PER INIZIARE", 38, "#ffffff");
+    this.tweens.add({ targets: via, scale: 1.08, yoyo: true, repeat: -1, duration: 600 });
+    testo(this, W / 2, 312, "Tocca o premi SPAZIO per saltare (anche due volte). Salta SULLE spie per timbrarle.", 18);
+    testo(this, W / 2, H - 22, "Un gioco di Fermo Posta · satira su fatti veri · prototipo", 16, "#ffffff");
+    const parti = () => { suono(1, 0.01, "sine", 0.0001); this.scene.start("Gioco", { stato: statoIniziale() }); };
+    this.input.once("pointerdown", parti);
+    this.input.keyboard.once("keydown-SPACE", parti);
+  }
+}
+
+// ---------- scena di gioco ----------
+class Gioco extends Phaser.Scene {
+  constructor() { super("Gioco"); }
+  init(dati) { this.s = dati.stato; this.L = LIVELLI[this.s.livello]; this.s.casse = 0; }
+
+  create() {
+    const L = this.L, i = this.s.livello;
+    this.fase = "gioco"; this.invul = 0; this.salti = 0;
+    this.cameras.main.setBackgroundColor(L.cielo);
+    this.nuvole = this.add.tileSprite(0, 40, W, 50, "nuvola").setOrigin(0, 0).setScrollFactor(0);
+    this.citta = this.add.tileSprite(0, H - 340, W, 260, "citta" + i).setOrigin(0, 0).setScrollFactor(0);
+    this.physics.world.setBounds(0, 0, L.lung + 900, H + 600);
+    this.physics.world.checkCollision.down = false;
+
+    this.piatt = this.physics.add.staticGroup();
+    this.segmenti = [];
+    this.casseGrp = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.spie = this.physics.add.group();
+    this.dogane = [];
+    this.genera();
+
+    // Huang alla partenza, che consegna le casse
+    this.add.image(90, SUOLO - 38, "huang").setFlipX(false);
+    this.fumetto(90, SUOLO - 110, "📦📦📦", 22);
+
+    this.player = this.physics.add.sprite(170, SUOLO - 60, "postino0");
+    this.player.body.setSize(24, 66).setOffset(14, 10);
+    this.player.setDepth(5);
+    this.carico = this.add.text(0, 0, "", { fontFamily: "Impact, Arial Black", fontSize: "18px", color: "#fff", stroke: "#222", strokeThickness: 4 }).setOrigin(0.5).setDepth(6);
+
+    this.physics.add.collider(this.player, this.piatt);
+    this.physics.add.collider(this.spie, this.piatt);
+    this.physics.add.overlap(this.player, this.casseGrp, (p, c) => this.prendi(c));
+    this.physics.add.overlap(this.player, this.spie, (p, sp) => this.incontra(sp));
+
+    const cam = this.cameras.main;
+    cam.setBounds(0, 0, L.lung + 900, H);
+    cam.startFollow(this.player, true, 0.15, 0, -250, 0);
+
+    // HUD
+    this.hud = this.add.text(16, 12, "", { fontFamily: "Impact, Arial Black", fontSize: "24px", color: "#fff", stroke: "#222", strokeThickness: 5 }).setScrollFactor(0).setDepth(20);
+    this.aggiornaHud();
+    const tit = testo(this, W / 2, 150, L.nome, 64, "#ffe13d").setScrollFactor(0).setDepth(20);
+    const sot = testo(this, W / 2, 210, L.sotto, 26).setScrollFactor(0).setDepth(20);
+    this.tweens.add({ targets: [tit, sot], alpha: 0, delay: 2200, duration: 600 });
+
+    this.input.on("pointerdown", () => this.tocco());
+    this.input.keyboard.on("keydown-SPACE", () => this.tocco());
+    this.input.keyboard.on("keydown-UP", () => this.tocco());
+    this.input.keyboard.on("keydown-W", () => this.tocco());
+  }
+
+  terra(x, len) {
+    const t = this.add.tileSprite(x, SUOLO, len, 90, "terra" + this.s.livello).setOrigin(0, 0);
+    this.piatt.add(t);
+    this.segmenti.push([x, x + len]);
+  }
+
+  tetto(x, y, len) {
+    const t = this.add.tileSprite(x, y, len, 22, "tetto").setOrigin(0, 0);
+    this.piatt.add(t);
+    t.body.checkCollision.down = false; t.body.checkCollision.left = false; t.body.checkCollision.right = false;
+  }
+
+  cassa(x, y) {
+    const c = this.casseGrp.create(x, y, "cassa");
+    this.tweens.add({ targets: c, y: y - 6, yoyo: true, repeat: -1, duration: 500 + Math.random() * 200 });
+  }
+
+  genera() {
+    const L = this.L;
+    const rnd = new Phaser.Math.RandomDataGenerator(["fermoposta" + this.s.livello]);
+    this.terra(0, 1100);
+    for (let k = 0; k < 4; k++) this.cassa(450 + k * 120, SUOLO - 50);
+    let x = 1100;
+    while (x < L.lung - 1300) {
+      if (rnd.frac() < L.buchi) x += rnd.between(120, 190);
+      const len = rnd.between(420, 900);
+      this.terra(x, len);
+      if (rnd.frac() < 0.55 && len > 500) {
+        const px = x + rnd.between(60, len - 300), py = SUOLO - rnd.between(110, 160), pl = rnd.between(170, 260);
+        this.tetto(px, py, pl);
+        for (let k = 0; k < 3; k++) this.cassa(px + 40 + k * 55, py - 34);
+      } else {
+        const n = rnd.between(1, 3), cx = x + rnd.between(80, len - 200);
+        for (let k = 0; k < n; k++) this.cassa(cx + k * 60, SUOLO - (k === 1 ? 110 : 50));
+      }
+      if (rnd.frac() < L.spie) {
+        const sp = this.spie.create(x + len - rnd.between(60, 200), SUOLO - 50, "spia0");
+        sp.setFlipX(true); sp.body.setSize(24, 66).setOffset(14, 10); sp.attiva = false; sp.ruba = false;
+      }
+      x += len;
+    }
+    this.terra(x, L.lung - x + 900);
+    // dogane distribuite sul percorso, sempre su un tratto di terra
+    for (let d = 1; d <= L.dogane; d++) {
+      let dx = Math.round(L.lung * d / (L.dogane + 1));
+      const seg = this.segmenti.find(([a, b]) => dx >= a + 100 && dx <= b - 160) || this.segmenti.find(([a, b]) => a > dx && b - a > 300);
+      if (!seg) continue;
+      if (dx < seg[0] + 100 || dx > seg[1] - 160) dx = seg[0] + 120;
+      this.add.image(dx, SUOLO - 150, "dogana").setDepth(3);
+      const tr = this.add.image(dx + 100, SUOLO - 38, "trump").setFlipX(true).setDepth(4);
+      this.dogane.push({ x: dx, fatta: false, trump: tr });
+    }
+    this.arrivoX = L.lung;
+    this.add.image(L.lung + 120, SUOLO - 140, "arrivo" + this.s.livello);
+  }
+
+  fumetto(x, y, s, size = 16, scroll = 1, durata = 0) {
+    const t = this.add.text(x, y, s, {
+      fontFamily: "Arial, sans-serif", fontStyle: "bold", fontSize: size + "px", color: "#222",
+      backgroundColor: "#ffffff", padding: { x: 10, y: 6 }, align: "center",
+    }).setOrigin(0.5).setDepth(15).setScrollFactor(scroll);
+    if (durata) this.tweens.add({ targets: t, alpha: 0, delay: durata, duration: 400, onComplete: () => t.destroy() });
+    return t;
+  }
+
+  scritta(x, y, s, colore, size = 30) {
+    const t = testo(this, x, y, s, size, colore).setDepth(16);
+    this.tweens.add({ targets: t, y: y - 70, alpha: 0, duration: 1300, onComplete: () => t.destroy() });
+  }
+
+  tocco() {
+    if (this.fase === "gioco") {
+      const p = this.player;
+      if (p.body.blocked.down || p.body.touching.down) this.salti = 0;
+      if (this.salti < 2) { p.setVelocityY(this.salti ? -560 : -640); this.salti++; SFX.salto(); }
+    } else if (this.fase === "attesa" && this.time.now > this.attesaDa) {
+      this.fase = "via"; this.dopo();
+    }
+  }
+
+  prendi(c) {
+    c.destroy(); this.s.casse++; this.s.raccolte++; SFX.cassa(); this.aggiornaHud();
+  }
+
+  incontra(sp) {
+    if (sp.ruba || this.fase !== "gioco") return;
+    const p = this.player;
+    if (p.body.velocity.y > 50 && p.body.bottom < sp.body.top + 22) {
+      SFX.timbro(); this.s.timbrate++;
+      this.scritta(sp.x, sp.y - 40, "TIMBRATA!", "#ff4d4d", 30);
+      p.setVelocityY(-480); this.salti = 1;
+      sp.disableBody(true, false); sp.setTexture("spia3"); sp.setAngle(-90);
+      this.tweens.add({ targets: sp, y: sp.y + 30, alpha: 0, duration: 700, onComplete: () => sp.destroy() });
+      return;
+    }
+    if (this.time.now < this.invul) return;
+    this.invul = this.time.now + 1200;
+    const presa = Math.min(this.s.casse, 1);
+    this.s.casse -= presa; this.s.aSpie += presa;
+    SFX.furto();
+    this.scritta(p.x, p.y - 60, presa ? "-1 CASSA ALLE SPIE" : "#@$%!", "#ffe13d", 24);
+    sp.ruba = true; sp.setFlipX(false); sp.setVelocityX(320);
+    if (presa) { sp.bottino = this.add.image(sp.x, sp.y - 50, "cassa").setDepth(6); }
+    this.tweens.add({ targets: p, alpha: 0.3, yoyo: true, repeat: 4, duration: 120, onComplete: () => p.setAlpha(1) });
+    this.aggiornaHud();
+  }
+
+  dogana(d) {
+    d.fatta = true;
+    const tassa = Math.ceil(this.s.casse * 0.25);
+    this.s.casse -= tassa; this.s.aTrump += tassa;
+    SFX.dogana();
+    this.scritta(d.x, SUOLO - 260, tassa ? `-${tassa} CASSE: IL 25%` : "IL 25% DI ZERO. PER STAVOLTA.", "#ffe13d", 30);
+    const f = this.fumetto(d.trump.x + 10, SUOLO - 150, DOGANA_FRASE, 15, 1, 2600);
+    const fonte = this.add.text(d.trump.x + 10, SUOLO - 110, DOGANA_FONTE, { fontFamily: "Arial", fontSize: "12px", color: "#fff", backgroundColor: "#222", padding: { x: 5, y: 2 } }).setOrigin(0.5).setDepth(15);
+    this.tweens.add({ targets: fonte, alpha: 0, delay: 2600, duration: 400, onComplete: () => fonte.destroy() });
+    this.tweens.add({ targets: d.trump, y: d.trump.y - 14, yoyo: true, repeat: 2, duration: 140 });
+    this.aggiornaHud();
+  }
+
+  caduta() {
+    SFX.caduta();
+    this.s.vite--;
+    const perse = Math.min(this.s.casse, 2);
+    this.s.casse -= perse; this.s.burroni += perse;
+    this.aggiornaHud();
+    if (this.s.vite <= 0) { this.fine(false); return; }
+    const x = this.player.x;
+    const seg = this.segmenti.find(([a, b]) => b > x + 40) || this.segmenti[this.segmenti.length - 1];
+    const nx = Math.max(seg[0] + 40, Math.min(x, seg[1] - 40));
+    this.player.setPosition(nx, SUOLO - 120).setVelocity(0, 0);
+    this.invul = this.time.now + 1500;
+    this.scritta(nx, SUOLO - 160, perse ? `-${perse} CASSE NEL BURRONE` : "OPS", "#ffffff", 26);
+  }
+
+  aggiornaHud() {
+    const v = "♥".repeat(Math.max(0, this.s.vite)) + "♡".repeat(3 - Math.max(0, this.s.vite));
+    this.hud.setText(`${v}   📦 ${this.s.casse}   Al 25%: ${this.s.aTrump}   Alle spie: ${this.s.aSpie}`);
+  }
+
+  pannello(righe, sotto) {
+    const g = this.add.rectangle(W / 2, H / 2, 640, 340, 0x000000, 0.78).setScrollFactor(0).setDepth(30).setStrokeStyle(4, 0xffe13d);
+    const t = testo(this, W / 2, H / 2 - 30, righe, 28, "#ffffff", { lineSpacing: 8 }).setScrollFactor(0).setDepth(31);
+    const s = testo(this, W / 2, H / 2 + 130, sotto, 26, "#ffe13d").setScrollFactor(0).setDepth(31);
+    this.tweens.add({ targets: s, alpha: 0.4, yoyo: true, repeat: -1, duration: 500 });
+    return [g, t, s];
+  }
+
+  fine(arrivato) {
+    this.fase = "attesa"; this.attesaDa = this.time.now + 700;
+    this.player.setVelocity(0, 0); this.player.body.allowGravity = false;
+    if (arrivato) {
+      SFX.arrivo();
+      this.s.consegnate += this.s.casse;
+      const ultimo = this.s.livello === LIVELLI.length - 1;
+      this.pannello(`CONSEGNATE: ${this.s.casse} CASSE\n\nAl 25%: ${this.s.aTrump}   Alle spie: ${this.s.aSpie}\nTimbrate: ${this.s.timbrate} spie`,
+        ultimo ? "TOCCA: ULTIME NOTIZIE" : "TOCCA PER IL PROSSIMO LIVELLO");
+      this.dopo = () => {
+        if (ultimo) this.scene.start("Fine", { stato: this.s, vinto: true });
+        else { this.s.livello++; this.scene.start("Gioco", { stato: this.s }); }
+      };
+    } else {
+      this.pannello(`PACCO SMARRITO\n\nRaccolte: ${this.s.raccolte}   Al 25%: ${this.s.aTrump}\nAlle spie: ${this.s.aSpie}   Nei burroni: ${this.s.burroni}`, "TOCCA PER RIPROVARE");
+      this.dopo = () => this.scene.start("Gioco", { stato: Object.assign(statoIniziale(), { livello: 0 }) });
+    }
+  }
+
+  update(t) {
+    if (this.fase !== "gioco") return;
+    const p = this.player, cam = this.cameras.main;
+    p.setVelocityX(this.L.vel);
+    const aTerra = p.body.blocked.down || p.body.touching.down;
+    if (aTerra) this.salti = 0;
+    p.setTexture(aTerra ? "postino" + (Math.floor(t / 110) % 2) : "postino2");
+    this.carico.setPosition(p.x, p.y - 56).setText(this.s.casse ? "📦×" + this.s.casse : "");
+    this.citta.tilePositionX = cam.scrollX * 0.3;
+    this.nuvole.tilePositionX = cam.scrollX * 0.1 + t * 0.01;
+
+    this.spie.getChildren().forEach(sp => {
+      if (!sp.active) return;
+      if (!sp.attiva && sp.x - p.x < 800) { sp.attiva = true; sp.setVelocityX(-110); }
+      if (sp.attiva && !sp.ruba && sp.body.blocked.down) sp.setTexture("spia" + (Math.floor(t / 160) % 2));
+      if (sp.ruba) sp.setTexture("spia" + (Math.floor(t / 90) % 2));
+      if (sp.bottino) sp.bottino.setPosition(sp.x, sp.y - 50);
+      if (sp.y > H + 200 || sp.x < cam.scrollX - 200 || sp.x > cam.scrollX + W + 300) {
+        if (sp.bottino) sp.bottino.destroy();
+        sp.destroy();
+      }
+    });
+    this.dogane.forEach(d => { if (!d.fatta && p.x > d.x) this.dogana(d); });
+    if (p.y > H + 80) this.caduta();
+    if (p.x > this.arrivoX + 60) this.fine(true);
+  }
+}
+
+// ---------- ultime notizie ----------
+class Fine extends Phaser.Scene {
+  constructor() { super("Fine"); }
+  init(d) { this.s = d.stato; }
+  create() {
+    this.cameras.main.setBackgroundColor("#f4efe6");
+    const s = this.s;
+    this.add.rectangle(W / 2, 64, W - 60, 90, 0x222222);
+    testo(this, W / 2, 64, "ULTIME NOTIZIE: JENSEN HUANG SI DIMETTE", 40, "#ffe13d");
+    const nero = { fontFamily: "Georgia, serif", fontSize: "21px", color: "#222", align: "center", lineSpacing: 6 };
+    this.add.text(W / 2, 170,
+      "8 dicembre 2025: la Casa Bianca dice sì agli H200 per la Cina.\nIl 25% va agli Stati Uniti.\n" +
+      "9 novembre 2026, Trump su Huang: \"he's a good person\".\n12 novembre 2026: Huang si dimette, \"effective immediately\".",
+      nero).setOrigin(0.5);
+    testo(this, W / 2, 300,
+      `Hai raccolto ${s.raccolte} casse e ne hai consegnate ${s.consegnate}.\n` +
+      `Al 25%: ${s.aTrump}  ·  Alle spie: ${s.aSpie}  ·  Nei burroni: ${s.burroni}  ·  Spie timbrate: ${s.timbrate}`, 26, "#ffffff");
+    const bottone = (x, label, colore, azione) => {
+      const r = this.add.rectangle(x, 420, 250, 64, colore).setStrokeStyle(4, 0x222222).setInteractive({ useHandCursor: true });
+      testo(this, x, 420, label, 26, "#ffffff");
+      r.on("pointerdown", azione);
+    };
+    bottone(W / 2 - 280, "GUARDA IL VIDEO", 0xd62828, () => window.open(VIDEO, "_blank"));
+    bottone(W / 2, "TELEGRAM", 0x229ed9, () => window.open(TELEGRAM, "_blank"));
+    bottone(W / 2 + 280, "RIGIOCA", 0x2b5fb3, () => this.scene.start("Gioco", { stato: statoIniziale() }));
+    this.add.text(W / 2, H - 30, "Fermo Posta · satira su fatti veri · frasi citate testualmente, fonti nella descrizione del video",
+      { fontFamily: "Arial", fontSize: "14px", color: "#555" }).setOrigin(0.5);
+  }
+}
+
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: "gioco",
+  width: W, height: H,
+  backgroundColor: "#1b1b1b",
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  physics: { default: "arcade", arcade: { gravity: { y: 1500 }, debug: false } },
+  scene: [Titolo, Gioco, Fine],
+});
+</script>
+</body>
+</html>

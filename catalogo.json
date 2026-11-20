@@ -1,0 +1,182 @@
+{
+  "categorie": [
+    {
+      "id": "puzzle",
+      "nome": "puzzle",
+      "riga": "blocchi, numeri, parole: si pensa, non si corre"
+    },
+    {
+      "id": "arcade",
+      "nome": "arcade",
+      "riga": "riflessi e punteggio, una partita dura un minuto"
+    },
+    {
+      "id": "lcd",
+      "nome": "lcd",
+      "riga": "portatili a cristalli liquidi: segmenti, bip e tre errori"
+    },
+    {
+      "id": "corsa",
+      "nome": "corsa",
+      "riga": "si corre senza fine, si scorre col dito"
+    },
+    {
+      "id": "tiro",
+      "nome": "tiro",
+      "riga": "si tocca il bersaglio prima che scappi"
+    },
+    {
+      "id": "platform",
+      "nome": "platform",
+      "riga": "salti, livelli, segreti"
+    },
+    {
+      "id": "satira",
+      "nome": "satira",
+      "riga": "i giochi di Fermo Posta sui fatti veri"
+    }
+  ],
+  "giochi": [
+    {
+      "slug": "incastro",
+      "titolo": "Incastro 8x8",
+      "categoria": "puzzle",
+      "descrizione": "Trascina i pezzi sulla griglia, riempi righe e colonne, fai combo. Finisce quando nessun pezzo entra.",
+      "url": "giochi/incastro/",
+      "comandi": "dito o mouse: trascina",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "fascia-asteroidi",
+      "titolo": "Fascia d'Asteroidi",
+      "categoria": "arcade",
+      "descrizione": "Una navetta, un campo di sassi che accelera. Spara, schiva, raccogli i cristalli: i sassi grandi incassano più colpi.",
+      "url": "giochi/fascia-asteroidi/",
+      "comandi": "frecce o WASD, Spazio spara · col dito: trascina e spara da sola",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "cache-miss",
+      "titolo": "Cache Miss",
+      "categoria": "lcd",
+      "descrizione": "Quattro server sputano pacchetti. Il sistemista li prende al volo: tre persi e il datacenter va giù.",
+      "url": "giochi/cache-miss/",
+      "comandi": "frecce sinistra e destra · tasti a schermo",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "bug-bash",
+      "titolo": "Bug Bash",
+      "categoria": "lcd",
+      "descrizione": "Sei moduli, i bug spuntano e scappano in produzione. Muovi la ciabatta e schiacciali in tempo.",
+      "url": "giochi/bug-bash/",
+      "comandi": "frecce · croce direzionale a schermo",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "gufo-enigmista",
+      "titolo": "Il Gufo Enigmista",
+      "categoria": "platform",
+      "descrizione": "Un platform con gli enigmi: due missioni nel villaggio del Gufo. Si apre sul suo sito.",
+      "url": "https://gufo-enigmista.pages.dev/",
+      "comandi": "frecce · tasti a schermo",
+      "telefono": true,
+      "offline": false,
+      "esterno": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "il-25",
+      "titolo": "Il 25%",
+      "categoria": "satira",
+      "descrizione": "Il primo prototipo di Fermo Posta: tre livelli di corsa da Santa Clara al porto, casse di chip H200, spie e dogane del 25%.",
+      "url": "giochi/il-25/",
+      "comandi": "frecce · tasti a schermo",
+      "telefono": true,
+      "offline": false,
+      "stato": "pronto"
+    },
+    {
+      "slug": "grande-circo",
+      "titolo": "Il Grande Circo",
+      "categoria": "satira",
+      "descrizione": "Il macro mondo che contiene quello reale: chip, dogane, navi e spie sotto il tendone. Meglio in orizzontale.",
+      "url": "giochi/grande-circo/",
+      "comandi": "tocca i protagonisti · frecce",
+      "telefono": true,
+      "offline": false,
+      "stato": "pronto"
+    },
+    {
+      "slug": "parola-del-giorno",
+      "titolo": "Parola del Giorno",
+      "categoria": "puzzle",
+      "descrizione": "Una parola italiana al giorno, sei tentativi, lettere che si accendono.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "kilobyte",
+      "titolo": "Kilobyte",
+      "categoria": "puzzle",
+      "descrizione": "Unisci i byte: 512 + 512 fa un KB, e su fino al GB.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "circuiti",
+      "titolo": "Circuiti",
+      "categoria": "puzzle",
+      "descrizione": "Tessere con i simboli da circuito: trova le coppie libere e svuota la scheda.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "drone",
+      "titolo": "Drone",
+      "categoria": "arcade",
+      "descrizione": "Un tocco per salire, fra le antenne della città.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "cavo",
+      "titolo": "Cavo",
+      "categoria": "arcade",
+      "descrizione": "Un cavo che cresce a ogni connettore. Non annodarti.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "firewall",
+      "titolo": "Firewall",
+      "categoria": "arcade",
+      "descrizione": "Una pallina, una racchetta, un muro di regole da abbattere.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "vicoli",
+      "titolo": "Vicoli",
+      "categoria": "corsa",
+      "descrizione": "Un rider in bici fra tre corsie di vicoli, si scorre col dito.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "luna-park",
+      "titolo": "Luna Park",
+      "categoria": "tiro",
+      "descrizione": "Floppy e piccioni di latta: tocca lo schermo e colpisci.",
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "salto-quantico",
+      "titolo": "Salto Quantico",
+      "categoria": "platform",
+      "descrizione": "Un personaggio nostro, monete, tre livelli e un segreto.",
+      "stato": "in-arrivo"
+    }
+  ]
+}

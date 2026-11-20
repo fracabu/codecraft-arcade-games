@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>arcade.nerd — sala giochi</title>
+<meta name="description" content="Sala giochi online: giochi leggeri per PC e telefono, divisi per categoria. Puzzle, arcade, portatili LCD e altro. Gratis, senza account, senza tracciamento.">
+<meta name="theme-color" content="#0a0f0b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone/icona.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone/icona-180.png">
+<meta property="og:title" content="arcade.nerd — sala giochi">
+<meta property="og:description" content="Giochi leggeri per PC e telefono, divisi per categoria. Gratis, senza account.">
+<meta property="og:image" content="icone/anteprima-social.png">
+<link rel="stylesheet" href="stile.css">
+</head>
+<body>
+<a class="salta" href="#cartucce">salta ai giochi</a>
+
+<header class="testa">
+  <h1 class="logo">arcade<span class="punto">.</span>nerd<span class="ver">v0.1</span></h1>
+  <p class="prompt"><span class="io">ospite@arcade</span>:<span class="dove" id="dove">~/giochi</span>$ <span id="comando">ls</span><span class="cursore" aria-hidden="true">█</span></p>
+  <p class="sotto">giochi leggeri per PC e telefono · niente account · niente tracciamento · i record restano sul tuo dispositivo</p>
+</header>
+
+<nav class="cartelle" aria-label="Categorie">
+  <ul id="cartelle"></ul>
+</nav>
+
+<div class="barra">
+  <label class="cerca">
+    <span aria-hidden="true">grep&nbsp;</span>
+    <input id="cerca" type="search" placeholder="cerca un gioco  [ / ]" autocomplete="off" spellcheck="false" aria-label="Cerca un gioco">
+  </label>
+  <button id="installa" class="tasto" hidden>[ installa app ]</button>
+</div>
+
+<p class="riga-cat" id="riga-cat" aria-live="polite"></p>
+
+<main>
+  <ul class="cartucce" id="cartucce" aria-label="Giochi"></ul>
+  <p class="vuoto" id="vuoto" hidden>grep: nessun gioco trovato. <button class="link" id="azzera">azzera la ricerca</button></p>
+</main>
+
+<footer class="piede">
+  <p><span class="dim">#</span> tasti: <kbd>/</kbd> cerca · <kbd>1</kbd>–<kbd>8</kbd> categorie · <kbd>←</kbd><kbd>→</kbd> scegli · <kbd>Invio</kbd> gioca</p>
+  <p><span class="dim">#</span> fatto con Claude Code · niente framework: HTML, CSS, JavaScript · si installa come app e gira anche offline</p>
+</footer>
+
+<script src="hub.js" type="module"></script>
+</body>
+</html>

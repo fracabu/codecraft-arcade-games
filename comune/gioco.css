@@ -1,0 +1,54 @@
+/* Pezzi comuni a tutti i giochi locali: link alla sala e schermata di fine partita. */
+:root {
+  --g-verde: #39ff88;
+  --g-ambra: #ffb000;
+  --g-testo: #d6ffd9;
+  --g-dim: #6c9675;
+  --g-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+.torna {
+  position: fixed; z-index: 5;
+  top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left));
+  font: 13px/1 var(--g-mono); color: var(--g-verde); text-decoration: none;
+  background: rgba(5, 10, 6, .72); border: 1px solid #24432d; border-radius: 4px;
+  padding: 8px 10px; min-height: 34px; display: inline-flex; align-items: center;
+}
+.torna:hover, .torna:focus-visible { color: #000; background: var(--g-ambra); outline: none; }
+
+.fp {
+  position: fixed; inset: 0; z-index: 20;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(3, 6, 4, .78);
+  font-family: var(--g-mono); color: var(--g-testo);
+  animation: fp-entra .18s ease-out;
+}
+@keyframes fp-entra { from { opacity: 0; } }
+.fp-box {
+  width: min(360px, 100%); max-height: 100%; overflow: auto;
+  background: #0b130d; border: 1px solid var(--g-verde); border-radius: 6px;
+  box-shadow: 0 0 30px rgba(57, 255, 136, .2);
+  padding: 18px 18px 16px; text-align: center;
+}
+.fp-titolo { margin: 0; font-size: 26px; color: var(--g-verde); letter-spacing: .08em; }
+.fp-punti { margin: 4px 0 12px; color: var(--g-dim); }
+.fp-punti b { color: var(--g-ambra); font-size: 22px; }
+.fp-nome label { display: block; color: var(--g-ambra); font-size: 13px; }
+.fp-nome input {
+  display: block; margin: 8px auto; width: 4.2em; text-align: center; text-transform: uppercase;
+  font: 28px var(--g-mono); letter-spacing: .15em; color: var(--g-verde);
+  background: #050906; border: 1px solid var(--g-verde); border-radius: 4px; padding: 4px;
+}
+.fp button, .fp-home {
+  font: 14px var(--g-mono); color: var(--g-verde); background: transparent;
+  border: 1px solid var(--g-verde); border-radius: 4px; padding: 10px 14px; cursor: pointer;
+  text-decoration: none; display: inline-block; min-height: 44px;
+}
+.fp button:hover, .fp-home:hover, .fp button:focus-visible, .fp-home:focus-visible { background: var(--g-verde); color: #04140a; outline: none; }
+.fp kbd { font: inherit; font-size: 11px; opacity: .7; }
+.fp-tab { list-style: none; margin: 8px 0 14px; padding: 0; text-align: left; font-size: 14px; }
+.fp-tab li { display: grid; grid-template-columns: 2.5em 1fr auto; gap: 8px; padding: 2px 6px; }
+.fp-tab li span:first-child { color: var(--g-dim); }
+.fp-tab li.fp-tuo { background: var(--g-ambra); color: #000; border-radius: 3px; }
+.fp-tab li.fp-tuo span:first-child { color: #000; }
+.fp-vuota { color: var(--g-dim); margin: 8px 0 14px; }
+.fp-azioni { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fascia d'Asteroidi — arcade.nerd</title>
+<meta name="description" content="Schiva i sassi, raccogli i cristalli, sopravvivi: arcade gratuito per PC e telefono.">
+<meta name="theme-color" content="#05080a">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icone/icona.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../comune/gioco.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #05080a; overflow: hidden; overscroll-behavior: none; }
+  #gioco { position: fixed; inset: 0; }
+  canvas { display: block; touch-action: none; }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+</style>
+</head>
+<body>
+<a class="torna" href="../../">&larr; sala giochi</a>
+<div id="gioco"></div>
+<script src="../../vendor/phaser-4.2.1.min.js"></script>
+<script type="module" src="gioco.js"></script>
+</body>
+</html>

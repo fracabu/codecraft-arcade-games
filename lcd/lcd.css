@@ -1,0 +1,113 @@
+/* Guscio dei portatili LCD di arcade.nerd: plastica grafite, vetro verdino, tasti in gomma. */
+:root {
+  --plastica: #23272b;
+  --plastica-2: #2d3237;
+  --filo: #3fe08a;
+  --lcd: #b6c2a2;
+  --lcd-scuro: #9eab8a;
+  --inchiostro: #141a12;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: #0a0f0b; color: #cfe8d2;
+  font: 14px/1.4 ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  overscroll-behavior: none;
+}
+.console {
+  min-height: 100%;
+  display: grid; place-items: center; align-content: center; gap: 10px;
+  padding: max(52px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+.guscio {
+  width: min(980px, 100%);
+  display: grid; gap: 14px 18px; align-items: center;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 3.2fr) minmax(120px, 1fr);
+  grid-template-areas: "marchio marchio marchio" "sx vetro dx";
+  background: linear-gradient(160deg, var(--plastica-2), var(--plastica) 60%);
+  border-radius: 22px 22px 22px 56px;
+  padding: 16px 22px 22px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.06), inset 0 -3px 0 rgba(0,0,0,.35), 0 12px 40px rgba(0,0,0,.5);
+}
+.marchio { grid-area: marchio; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 6px; }
+.marchio .nome { color: #e9f3ea; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; }
+.marchio .serie { color: var(--filo); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+
+.vetro {
+  grid-area: vetro;
+  background: #15191c; padding: 12px; border-radius: 10px;
+  box-shadow: inset 0 0 0 2px #0c0f11, inset 0 4px 10px rgba(0,0,0,.6);
+}
+svg.lcd {
+  display: block; width: 100%; height: auto; aspect-ratio: 400 / 240;
+  background: radial-gradient(120% 140% at 30% 20%, var(--lcd), var(--lcd-scuro));
+  border-radius: 4px;
+  color: var(--inchiostro);
+}
+/* il "fondo stampato" del portatile: fisso, tenue */
+.fondo { color: #6f7b62; }
+.fondo * { fill: none; stroke: currentColor; stroke-width: 1.2; }
+.fondo .pieno { fill: currentColor; stroke: none; opacity: .35; }
+.fondo text { fill: currentColor; stroke: none; font: 9px ui-monospace, monospace; letter-spacing: .1em; }
+/* segmenti: spenti si intravedono, accesi neri. Nessuna transizione: un LCD scatta. */
+.seg { fill: currentColor; opacity: .075; }
+.seg.on { opacity: .9; }
+.seg * { fill: currentColor; }
+.seg .linea { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hud text { font: 11px ui-monospace, monospace; font-weight: 700; letter-spacing: .06em; }
+.hud text.x { font-size: 17px; }
+
+.pannello { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+.pannello.sx { grid-area: sx; }
+.pannello.dx { grid-area: dx; }
+.modi { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+button { font: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; }
+.mini {
+  font-size: 10px; letter-spacing: .08em; color: #d7e2d9;
+  background: #3a4047; border: 0; border-radius: 999px; padding: 7px 10px; min-height: 30px;
+  box-shadow: 0 2px 0 #15181b;
+}
+.mini:active, .mini.giu { transform: translateY(2px); box-shadow: none; }
+.mini.muto { opacity: .45; text-decoration: line-through; }
+.tasto {
+  border: 0; color: #e6efe7; background: radial-gradient(circle at 35% 30%, #5a636b, #3a4148 70%);
+  box-shadow: 0 5px 0 #121518, 0 7px 12px rgba(0,0,0,.45);
+  display: grid; place-items: center; font-size: 22px;
+}
+.tasto.giu, .tasto:active { transform: translateY(4px); box-shadow: 0 1px 0 #121518; }
+.tasto.grande { width: clamp(76px, 16vw, 104px); aspect-ratio: 1; border-radius: 50%; }
+.tasto.rosso { background: radial-gradient(circle at 35% 30%, #4ff59f, #1f9c5a 72%); color: #04140a; font-weight: 700; }
+
+.croce {
+  display: grid; grid-template-columns: repeat(3, clamp(42px, 8.5vw, 54px)); grid-template-rows: repeat(3, clamp(42px, 8.5vw, 54px));
+  grid-template-areas: ". su ." "sx mezzo dx" ". giu .";
+}
+.croce .tasto { border-radius: 8px; font-size: 16px; }
+.c-su { grid-area: su; } .c-sx { grid-area: sx; } .c-dx { grid-area: dx; } .c-giu { grid-area: giu; }
+.c-mezzo { grid-area: mezzo; background: #3a4148; }
+
+.aiuto { margin: 0; color: #6c9675; font-size: 12px; text-align: center; max-width: 60ch; }
+
+/* telefono in verticale: lo schermo sopra, i comandi sotto, come un portatile a libro */
+@media (max-aspect-ratio: 4/5) {
+  .guscio {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "marchio marchio" "vetro vetro" "sx dx";
+    border-radius: 22px 22px 56px 22px;
+    padding: 14px 14px 22px;
+  }
+  .tasto.grande { width: clamp(84px, 26vw, 112px); }
+  .croce { grid-template-columns: repeat(3, clamp(46px, 14vw, 58px)); grid-template-rows: repeat(3, clamp(46px, 14vw, 58px)); }
+}
+/* telefono in orizzontale, schermo basso: tutto più compatto */
+@media (max-height: 480px) and (orientation: landscape) {
+  .console { padding-top: max(8px, env(safe-area-inset-top)); }
+  .guscio { padding: 8px 14px 12px; gap: 6px 12px; width: min(100%, calc((100vh - 40px) * 2.4)); }
+  .marchio { padding-left: 128px; }   /* lascia posto al link "sala giochi" */
+  .marchio .nome { font-size: 14px; }
+  .aiuto { display: none; }
+  .torna { top: 6px; padding: 6px 8px; min-height: 28px; font-size: 12px; }
+}
+@media (pointer: coarse) { .aiuto .tastiera { display: none; } }
