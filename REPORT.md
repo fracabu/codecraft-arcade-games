@@ -130,3 +130,6 @@ Phaser entra in cache alla prima partita di Fascia d'Asteroidi.
 - **Mainframe** (`/platform`): collaudo locale **65 su 65**, con camminata, scala, salto della bobina e spina
   staccata da tastiera vera; croce e SALTA col dito. Con la GPU vera: 60 fps fissi.
 - Anche Mainframe non è ancora stato provato da una persona su un telefono vero.
+- Poi, su ok di Francesco: repo reso **pubblico** (prima aggiunti `.claude/skills/LICENSE` Apache-2.0 e `NOTICE.md`
+  con la provenienza delle skill); progetto Cloudflare `arcade-nerd` **cancellato**
+  (`wrangler pages project delete arcade-nerd`): `arcade-nerd.pages.dev` ora risponde 530. Resta solo il nuovo indirizzo.
