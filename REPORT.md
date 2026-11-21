@@ -133,3 +133,40 @@ Phaser entra in cache alla prima partita di Fascia d'Asteroidi.
 - Poi, su ok di Francesco: repo reso **pubblico** (prima aggiunti `.claude/skills/LICENSE` Apache-2.0 e `NOTICE.md`
   con la provenienza delle skill); progetto Cloudflare `arcade-nerd` **cancellato**
   (`wrangler pages project delete arcade-nerd`): `arcade-nerd.pages.dev` ora risponde 530. Resta solo il nuovo indirizzo.
+
+### 21/11/2026: Rete! (calcio) e nuova cartella /sport
+- **Rete!** (`giochi/rete/`, cartella nuova `/sport`): calcetto in gabbia visto dall'alto, chiesto "tipo Kick Off"
+  (genere, non copia: nomi, squadre e grafica nostri). Porta palla, passa (il comando va al compagno), tira con un tocco,
+  ruba palla in scivolata o entrando su chi la porta. Portieri con tempo di reazione, pali, traversa, gabbia su cui la palla
+  rimbalza (niente rimesse). Coppa dei Server: sei avversari (Dinamo Debug, Sporting Cache, Atletico Kernel, Union Overflow,
+  Real Mainframe, Olimpia Quantum), due minuti a partita, pareggio = golden gol di 45 s, poi passa chi ha tirato di più in
+  porta; persa una partita si è fuori. Radar del campo.
+- **Prima versione bocciata** da Francesco alla prima partita ("orrendo ingiocabile quasi"), con 76 prove su 76 passate.
+  Una prova nuova, giocata come una persona (tasti veri, nessun aggancio), ha dato il motivo: la palla "libera" alla
+  Kick Off era a portata di piede in 2 campioni su 80; e sul PC il campo era una striscia verticale con due terzi di
+  schermo neri, giocatori di 10 pixel. Lezione scritta nel brain del metodo: `il-collaudo-non-gioca`.
+- **Seconda versione**: campo più piccolo (240x400) e giocatori più grandi; palla al piede di chi la conduce, che si può
+  rubare; tiro immediato; canvas a tutto schermo alla risoluzione vera (orizzontale sul PC, verticale sul telefono) con la
+  telecamera che ingrandisce; punteggio, titoli e radar in HTML. La stessa prova "da persona" ha poi trovato 14 gol subiti
+  su 20 nati dal rinvio del nostro portiere contro l'attaccante fermo davanti a lui: ora il rinvio va alto e gli avversari
+  si allontanano mentre il portiere ha la palla; un contrasto fallito fa schizzare la palla di lato.
+- Poi, su richiesta ("il pallone lo levo solo in scivolata o andando molto vicino?"): contrasto con più margine per noi
+  (sul pallone o addosso a chi lo porta, ma non alle spalle), scivolata che porta via il pallone anche se manca le gambe
+  (a vuoto si resta a terra più a lungo), chi porta palla pressato da vicino a volte la perde. Squadre forti rinforzate.
+- In simulazione (bot in Node): 8 vittorie su 8 con le prime tre squadre, 4 su 8 con Real Mainframe, 1 su 8 con la finale.
+  Collaudo locale **76 su 76** (11 prove di Rete! riscritte per la nuova meccanica).
+- Non ancora pubblicato; la seconda versione aspetta il giudizio di Francesco.
+
+### 21/11/2026: Reperibile (survivors-like), primo prototipo "da Steam"
+- Nato dalla domanda "giochi fichi per Steam o App Store": ricerca sul metodo di Riccardo Belli Contarini (pagina
+  riccardobelli.com/gioco: le stesse 79 skill di gamedev-skills già usate qui; la pubblicazione su Steam/App Store
+  "la fai tu", non è descritta) e sui generi che vendono; scelto il survivors-like (Megabonk, Brotato), prototipo
+  fatto dentro la sala su richiesta.
+- **Reperibile** (`giochi/reperibile/`, /arcade): sei il sistemista reperibile, dalle 22:00 alle 06:00 (10 minuti).
+  Nemici: bug, topi, glitch, due ticket urgenti (boss), uno sciame a ogni ora. Armi automatiche: tazza di caffè,
+  paperelle di gomma, cavo di rete, estintore; sei potenziamenti passivi; a ogni livello tre carte. Tema scelto per
+  non ricalcare Desktop Survivors 98 (survivors-like già ambientato nel desktop di un PC).
+- Tarato in simulazione prima della grafica: alla prima versione si moriva in 28 s da fermi e in un minuto scappando.
+  Poi, con tasti veri (pagina `il-collaudo-non-gioca` del brain del metodo): 90 s sopravvissuti, 4 livelli, 117
+  nemici, vita minima 46. Collaudo locale **86 su 86**.
+- Non ancora giocato da Francesco, non pubblicato, nessun commit.

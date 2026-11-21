@@ -31,6 +31,11 @@
       "riga": "salti, livelli, segreti"
     },
     {
+      "id": "sport",
+      "nome": "sport",
+      "riga": "palla, campo, avversari: una partita dura due minuti"
+    },
+    {
       "id": "satira",
       "nome": "satira",
       "riga": "i giochi di Fermo Posta sui fatti veri"
@@ -133,6 +138,28 @@
       "descrizione": "Il mainframe del piano -2 è impazzito e fa rotolare bobine di nastro giù per l'impalcatura. Salta, prendi la chiavetta per formattarle, in cima stacca la spina.",
       "url": "giochi/mainframe/",
       "comandi": "frecce o WASD, Spazio salta · croce e SALTA a schermo",
+      "telefono": true,
+      "offline": true,
+      "stato": "pronto"
+    },
+    {
+      "slug": "rete",
+      "titolo": "Rete!",
+      "categoria": "sport",
+      "descrizione": "Calcetto in gabbia visto dall'alto, sul tetto del datacenter. Porta palla, passa, tira, rubala in scivolata. Sei partite di coppa: se perdi sei fuori.",
+      "url": "giochi/rete/",
+      "comandi": "frecce o WASD, Spazio tira, X passa · levetta, TIRO e PASSA a schermo",
+      "telefono": true,
+      "offline": true,
+      "stato": "in-arrivo"
+    },
+    {
+      "slug": "reperibile",
+      "titolo": "Reperibile",
+      "categoria": "arcade",
+      "descrizione": "Notte in sala server, sei il sistemista di turno: dalle 22:00 alle 06:00 bug, topi, glitch e ticket urgenti. Le armi colpiscono da sole, tu scappa, raccogli i byte e scegli i potenziamenti.",
+      "url": "giochi/reperibile/",
+      "comandi": "frecce o WASD, 1 2 3 per scegliere · col dito: trascina dove vuoi",
       "telefono": true,
       "offline": true,
       "stato": "pronto"

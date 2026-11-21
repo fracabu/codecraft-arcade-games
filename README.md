@@ -18,6 +18,8 @@ Sviluppato da [codecraft](https://www.codecraft.it).
 | Bug Bash | lcd | schiaccia i bug prima che arrivino in produzione |
 | Luna Park | tiro | floppy volanti e piccioni di latta, tre colpi per volo |
 | Mainframe | platform | sali l'impalcatura, salta le bobine di nastro, in cima stacca la spina |
+| Reperibile | arcade | survivors-like nella sala server di notte: le armi sparano da sole, tu scappi e scegli i potenziamenti |
+| Rete! | sport | calcetto in gabbia visto dall'alto (in pausa: nel repo, non ancora in sala) |
 | Il Gufo Enigmista | platform | platform con enigmi, si apre sul suo sito |
 | Il 25% · Il Grande Circo | satira | i giochi di Fermo Posta sui fatti veri |
 
@@ -50,6 +52,9 @@ Un gioco LCD si fa con `lcd/motore.js`: si descrivono segmenti e regole (`disegn
 
 Mainframe separa il mondo dal disegno: `giochi/mainframe/regole.js` (travi inclinate, scale, bobine, punti,
 a passo fisso di 1/60 s) non conosce Phaser e si prova anche in Node; `gioco.js` disegna, suona e legge i comandi.
+Rete! (`giochi/rete/`) segue lo stesso schema: `regole.js` (campo, palla al piede e palla libera con attrito e rimbalzi,
+squadre guidate dal computer, portieri con tempo di reazione) gira anche in Node; `gioco.js` disegna a tutto schermo,
+alla risoluzione vera, con la telecamera che segue la palla; punteggio e titoli sono HTML.
 Due cose imparate lì, valide per ogni gioco Phaser 4 del repo:
 - il `delta` che Phaser passa a `update` resta ~17 ms anche quando i fotogrammi calano: il tempo di gioco
   va misurato con `performance.now()`, altrimenti sui telefoni lenti si gioca al rallentatore;

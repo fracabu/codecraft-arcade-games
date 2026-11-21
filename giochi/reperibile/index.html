@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reperibile — arcade.nerd</title>
+<meta name="description" content="Sei il sistemista reperibile: dalle 22:00 alle 06:00 la sala server si riempie di bug, topi, glitch e ticket urgenti. Le armi colpiscono da sole, tu scappa, raccogli i byte e scegli i potenziamenti. Gratis per PC e telefono.">
+<meta name="theme-color" content="#05080a">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="icon" href="../../icone/icona.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../comune/gioco.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #05080a; overflow: hidden; overscroll-behavior: none; }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; font-family: var(--g-mono); color: var(--g-testo); }
+  #gioco { position: fixed; left: 0; right: 0; top: 52px; bottom: 0; touch-action: none; }
+  canvas { display: block; touch-action: none; }
+
+  .hud {
+    position: fixed; z-index: 3; top: 0; left: 0; right: 0; height: 52px; box-sizing: border-box;
+    padding: 6px 12px 6px max(134px, env(safe-area-inset-left)); display: grid; gap: 3px 12px;
+    grid-template-columns: auto 1fr auto; grid-template-rows: 1fr 1fr; align-items: center;
+    background: #05080a; border-bottom: 1px solid #1c3324; font-size: 14px; white-space: nowrap;
+  }
+  #ora { grid-row: 1 / 3; font-size: 26px; color: var(--g-ambra); letter-spacing: .04em; }
+  .barra { height: 9px; background: #10201a; border: 1px solid #24432d; border-radius: 2px; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; transition: width .12s; }
+  #vita i { background: #ff5a4f; }
+  #exp i { background: var(--g-verde); }
+  #livello { color: var(--g-verde); text-align: right; }
+  #uccisi { color: var(--g-dim); text-align: right; }
+  @media (max-width: 520px) { .hud { padding-left: 128px; gap: 2px 8px; font-size: 12px; } #ora { font-size: 20px; } }
+
+  #ahi { position: fixed; inset: 52px 0 0 0; z-index: 2; pointer-events: none; box-shadow: inset 0 0 90px 20px rgba(255, 40, 40, .55); opacity: 0; transition: opacity .25s; }
+  #ahi.su { opacity: 1; transition: none; }
+
+  #banner {
+    position: fixed; z-index: 6; left: 50%; top: 30%; transform: translate(-50%, -50%);
+    background: rgba(5, 8, 10, .86); border: 2px solid currentColor; border-radius: 6px;
+    padding: 10px 20px; font-size: clamp(18px, 4.6vw, 30px); text-align: center; white-space: pre-line; line-height: 1.3;
+    pointer-events: none; color: var(--g-verde);
+  }
+  #banner[hidden] { display: none; }
+  #banner.entra { animation: entra .22s cubic-bezier(.2, 1.6, .4, 1); }
+  @keyframes entra { from { transform: translate(-50%, -50%) scale(1.35); opacity: 0; } }
+
+  .pannello {
+    position: fixed; z-index: 7; inset: 52px 0 0 0; display: grid; place-items: center; padding: 12px;
+    background: rgba(5, 8, 10, .6);
+  }
+  .pannello[hidden] { display: none; }
+  .box {
+    width: min(480px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box;
+    background: #07100b; border: 2px solid var(--g-verde); border-radius: 6px; padding: 18px 20px; text-align: center;
+  }
+  #titolo h1 { margin: 0; font-size: 40px; color: var(--g-verde); letter-spacing: .06em; font-weight: normal; }
+  #titolo p { margin: 10px 0; font-size: 15px; line-height: 1.45; }
+  #titolo .sotto { color: #b9f5c1; }
+  #titolo .comandi-pc, #titolo .comandi-tocco { color: var(--g-ambra); }
+  body.tocco .comandi-pc, body:not(.tocco) .comandi-tocco { display: none; }
+  .via { color: #9fcfa8; animation: lampeggia 1.2s infinite; margin-top: 16px; }
+  @keyframes lampeggia { 50% { opacity: .35; } }
+  .rec { color: var(--g-dim); font-size: 13px; }
+
+  #scelta .box { border-color: var(--g-ambra); }
+  #scelta h2 { margin: 0 0 12px; font-weight: normal; color: var(--g-ambra); font-size: 22px; }
+  .carta {
+    display: grid; grid-template-columns: 2.2em 1fr; gap: 2px 10px; width: 100%; text-align: left; margin: 8px 0;
+    font: 14px var(--g-mono); color: var(--g-testo); background: #0b1a11; border: 1px solid #2c5a3a; border-radius: 5px;
+    padding: 10px 12px; cursor: pointer; min-height: 56px;
+  }
+  .carta kbd { grid-row: 1 / 3; align-self: center; font: inherit; color: var(--g-ambra); border: 1px solid var(--g-ambra); border-radius: 3px; text-align: center; padding: 4px 0; }
+  .carta b { font-weight: normal; color: var(--g-verde); }
+  .carta b em { font-style: normal; color: var(--g-ambra); margin-left: 6px; }
+  .carta span { color: #b9cdbf; font-size: 13px; }
+  .carta:hover, .carta:focus-visible, .carta.su { border-color: var(--g-ambra); background: #15261a; outline: none; }
+
+  #leva { position: fixed; z-index: 4; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+    border: 2px solid rgba(57, 255, 136, .5); background: rgba(57, 255, 136, .06); pointer-events: none; }
+  #leva i { position: absolute; left: 38px; top: 38px; width: 44px; height: 44px; border-radius: 50%; background: rgba(57, 255, 136, .35); border: 2px solid var(--g-verde); }
+  #leva[hidden] { display: none; }
+</style>
+</head>
+<body>
+<a class="torna" href="../../">&larr; sala giochi</a>
+<div class="hud">
+  <span id="ora">22:00</span>
+  <div class="barra" id="vita" title="vita"><i></i></div><span id="livello">liv 1</span>
+  <div class="barra" id="exp" title="esperienza"><i></i></div><span id="uccisi">0</span>
+</div>
+<div id="gioco"></div>
+<div id="ahi"></div>
+<div id="leva" hidden><i></i></div>
+<div id="banner" hidden></div>
+<div id="titolo" class="pannello">
+  <div class="box">
+    <h1>REPERIBILE</h1>
+    <p class="sotto">notte in sala server, sei di turno tu</p>
+    <p>Dalle 22:00 alle 06:00 arrivano bug, topi, glitch e ticket urgenti.<br>Le armi colpiscono da sole: tu muoviti, raccogli i byte verdi<br>e a ogni livello scegli un potenziamento. Resisti fino all'alba.</p>
+    <p class="comandi-pc">frecce o WASD per muoverti · 1 2 3 per scegliere</p>
+    <p class="comandi-tocco">trascina il dito dove vuoi per muoverti · tocca la carta per scegliere</p>
+    <p class="via"></p>
+    <p class="rec"></p>
+  </div>
+</div>
+<div id="scelta" class="pannello" hidden>
+  <div class="box">
+    <h2>LIVELLO SU: scegli</h2>
+    <div id="carte"></div>
+  </div>
+</div>
+<script src="../../vendor/phaser-4.2.1.min.js"></script>
+<script type="module" src="gioco.js"></script>
+</body>
+</html>

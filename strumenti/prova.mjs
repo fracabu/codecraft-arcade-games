@@ -73,8 +73,8 @@ if (!VELOCE) {
     ok("home: la cartella /lcd mostra 2 giochi pronti", (await page.locator(".cartuccia:not(.in-arrivo)").count()) === 2);
     await page.keyboard.press("1");
     await page.keyboard.press("/");
-    await page.keyboard.type("bug");
-    ok("home: la ricerca 'bug' trova Bug Bash", (await page.locator(".cartuccia h2").allTextContents()).join() === "Bug Bash");
+    await page.keyboard.type("bash");
+    ok("home: la ricerca 'bash' trova Bug Bash", (await page.locator(".cartuccia h2").allTextContents()).join() === "Bug Bash");
     await page.close();
   }
 
@@ -260,6 +260,109 @@ if (!VELOCE) {
     await page.close();
   }
 
+  // 6e. Rete!: tastiera vera per portare palla, tirare in porta e passare; poi vittoria, turno 2 e sconfitta
+  {
+    const { page } = await apri(pc, "giochi/rete/");
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 5000 }).catch(() => {});
+    const tieni = async (tasto, condizione, arg, ms = 10000) => {
+      await page.keyboard.down(tasto);
+      const fatto = await page.waitForFunction(condizione, arg, { timeout: ms }).then(() => true, () => false);
+      await page.keyboard.up(tasto);
+      return fatto;
+    };
+    // portare palla: la palla resta al piede mentre si corre
+    await page.evaluate(() => GIOCO.metti(120, 330));
+    await tieni("ArrowUp", () => GIOCO.stato().y < 270);
+    const st1 = await page.evaluate(() => GIOCO.stato());
+    ok("rete: con la freccia su si porta palla, la palla resta al piede", st1.conPalla && st1.y < 270 && Math.abs(st1.palla.y - st1.y) < 12, JSON.stringify({ y: st1.y, palla: st1.palla.y, conPalla: st1.conPalla }));
+    // tiro: un tocco di Spazio davanti alla porta, portiere spostato di lato
+    await page.evaluate(() => { GIOCO.metti(120, 70); GIOCO.portiere(94); });
+    await page.keyboard.press("Space");
+    const gol = await page.waitForFunction(() => GIOCO.stato().gol[0] === 1, null, { timeout: 4000 }).then(() => true, () => false);
+    const st2 = await page.evaluate(() => GIOCO.stato());
+    ok("rete: un tocco di Spazio tira e la palla entra in porta (+100)", gol && st2.punti === 100, JSON.stringify({ gol: st2.gol, punti: st2.punti, palla: st2.palla }));
+    // passaggio: X manda la palla al compagno davanti e il comando passa a lui
+    await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 6000 }).catch(() => {});
+    await page.evaluate(() => GIOCO.metti(120, 200, Math.PI / 2));
+    const prima = (await page.evaluate(() => GIOCO.stato())).umano;
+    await page.keyboard.press("x");
+    await page.waitForTimeout(150);
+    const st3 = await page.evaluate(() => GIOCO.stato());
+    ok("rete: X passa al compagno e il comando passa a lui", st3.umano !== prima && st3.palla.v > 60, JSON.stringify({ prima, dopo: st3.umano, v: st3.palla.v }));
+    // fine del tempo in vantaggio: vittoria, bonus, si passa alla seconda partita
+    const puntiPrima = (await page.evaluate(() => GIOCO.stato())).punti;
+    await page.evaluate(() => GIOCO.risultato(2, 0));
+    const turno2 = await page.waitForFunction(() => GIOCO.stato().turno === 1 && GIOCO.stato().fase === "pronti", null, { timeout: 6000 }).then(() => true, () => false);
+    const st4 = await page.evaluate(() => GIOCO.stato());
+    ok("rete: vinta la partita si passa alla seconda col bonus", turno2 && st4.punti === puntiPrima + 300 + 100, JSON.stringify({ turno: st4.turno, punti: st4.punti }));
+    // fine del tempo in svantaggio: eliminati, fine partita con la classifica
+    await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 6000 }).catch(() => {});
+    await page.evaluate(() => GIOCO.risultato(0, 1));
+    const fp = await page.waitForSelector(".fp", { timeout: 8000 }).then(() => true, () => false);
+    ok("rete: persa una partita si è fuori e c'è la fine partita", fp);
+    await page.close();
+  }
+  // 6f. Rete! sul telefono: levetta e tasto TIRO a schermo
+  {
+    const { page } = await apri(tel, "giochi/rete/");
+    const b = await page.locator(".leva").boundingBox();
+    const evento = (sel, tipo, x, y) => page.locator(sel).dispatchEvent(tipo, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x, clientY: y });
+    await evento(".leva", "pointerdown", b.x + b.width / 2, b.y + b.height / 2);
+    await evento(".leva", "pointerup", b.x + b.width / 2, b.y + b.height / 2);
+    await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 5000 }).catch(() => {});
+    await page.evaluate(() => GIOCO.metti(120, 330));
+    await evento(".leva", "pointerdown", b.x + b.width / 2, b.y + 4);
+    const corre = await page.waitForFunction(() => GIOCO.stato().y < 290, null, { timeout: 8000 }).then(() => true, () => false);
+    await evento(".leva", "pointerup", b.x + b.width / 2, b.y + 4);
+    ok("rete: la levetta a schermo fa correre il giocatore", corre, JSON.stringify(await page.evaluate(() => GIOCO.stato().y)));
+    await page.evaluate(() => GIOCO.metti(120, 200));
+    await evento(".tiro", "pointerdown", 0, 0);
+    const tirata = await page.waitForFunction(() => GIOCO.stato().palla.v > 150, null, { polling: "raf", timeout: 3000 }).then(() => true, () => false);
+    await evento(".tiro", "pointerup", 0, 0);
+    ok("rete: il tasto TIRO calcia", tirata);
+    await page.close();
+  }
+
+  // 6g. Reperibile: tastiera vera per muoversi, livello su con le tre carte, scelta col tasto 2, fine turno
+  {
+    const { page } = await apri(pc, "giochi/reperibile/");
+    await page.keyboard.press("Enter");
+    const x0 = (await page.evaluate(() => GIOCO.stato())).x;
+    await page.keyboard.down("ArrowRight");
+    const corre = await page.waitForFunction((x) => GIOCO.stato().x > x + 40, x0, { timeout: 8000 }).then(() => true, () => false);
+    await page.keyboard.up("ArrowRight");
+    ok("reperibile: con la freccia destra il sistemista si muove", corre);
+    const dopo = await page.waitForFunction(() => GIOCO.stato().uccisi > 0, null, { timeout: 15000 }).then(() => true, () => false);
+    ok("reperibile: la tazza di caffè parte da sola e abbatte i bug", dopo, JSON.stringify(await page.evaluate(() => GIOCO.stato().uccisi)));
+    await page.evaluate(() => GIOCO.livello());
+    const carte = await page.waitForFunction(() => document.querySelectorAll("#scelta:not([hidden]) .carta").length === 3, null, { timeout: 5000 }).then(() => true, () => false);
+    ok("reperibile: al livello su compaiono tre carte e il gioco si ferma", carte && (await page.evaluate(() => GIOCO.stato().fase)) === "scelta");
+    const prima = await page.evaluate(() => GIOCO.stato());
+    await page.keyboard.press("2");
+    const st = await page.evaluate(() => GIOCO.stato());
+    const nascosto = await page.evaluate(() => document.querySelector("#scelta").hidden);
+    ok("reperibile: il tasto 2 sceglie la seconda carta e si riparte", st.fase === "gioco" && nascosto && prima.scelte.length === 3, JSON.stringify({ scelta: prima.scelte[1], armi: st.armi }));
+    await page.evaluate(() => GIOCO.vita(0));
+    const fp = await page.waitForSelector(".fp", { timeout: 8000 }).then(() => true, () => false);
+    ok("reperibile: a vita finita c'è la fine partita", fp);
+    await page.close();
+  }
+  // 6h. Reperibile sul telefono: si appoggia il dito e si trascina
+  {
+    const { page } = await apri(tel, "giochi/reperibile/");
+    await page.locator("#titolo").tap();
+    await page.waitForFunction(() => GIOCO.stato().fase === "gioco", null, { timeout: 5000 }).catch(() => {});
+    const y0 = (await page.evaluate(() => GIOCO.stato())).y;
+    const ev = (tipo, x, y) => page.locator("#gioco").dispatchEvent(tipo, { pointerId: 9, pointerType: "touch", isPrimary: true, clientX: x, clientY: y });
+    await ev("pointerdown", 200, 500);
+    await ev("pointermove", 200, 440);
+    const su = await page.waitForFunction((y) => GIOCO.stato().y < y - 30, y0, { timeout: 8000 }).then(() => true, () => false);
+    await ev("pointerup", 200, 440);
+    ok("reperibile: trascinando il dito il sistemista si muove", su, JSON.stringify({ y0, y: await page.evaluate(() => GIOCO.stato().y) }));
+    await page.close();
+  }
+
   // 7. FPS dell'arcade con la CPU rallentata 4 volte
   {
     const { page } = await apri(tel, "giochi/fascia-asteroidi/");
@@ -305,6 +408,14 @@ if (ANTEPRIME) {
       await p.evaluate(() => { GIOCO.avvia(); GIOCO.ferma(); GIOCO.tempo(); GIOCO.metti(210, 6); GIOCO.passo(60 * 9); GIOCO.metti(200, 4); GIOCO.tempo(4200); GIOCO.passo(1); });
       await p.waitForTimeout(300);
     },
+    "rete": async (p) => {
+      await p.evaluate(() => { GIOCO.avvia(); GIOCO.ferma(); GIOCO.passo(60 * 2); GIOCO.metti(104, 62, -1.2); GIOCO.passo(1, { su: true, dx: true }); });
+      await p.waitForTimeout(1200);
+    },
+    "reperibile": async (p) => {
+      await p.evaluate(() => { GIOCO.avvia(); GIOCO.ferma(); for (let i = 0; i < 5400; i++) { if (GIOCO.stato().fase === "scelta") GIOCO.scegli(0); GIOCO.vita(100); GIOCO.passo(1, { ax: Math.cos(i / 60), ay: Math.sin(i / 60) }); } });
+      await p.waitForTimeout(400);
+    },
     "il-25": async (p) => { await p.waitForTimeout(1500); },
     "grande-circo": async (p) => { await p.waitForTimeout(2500); },
   };
@@ -318,11 +429,11 @@ if (ANTEPRIME) {
       await page.waitForTimeout(200);
       await page.locator("svg.lcd").screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72 });
       await page.setViewportSize({ width: 640, height: 360 });
-    } else if (g.slug === "mainframe") {
-      // gioco in verticale: della cartuccia si mostra la parte alta, mainframe e prime travi
-      await page.setViewportSize({ width: 640, height: 854 });
+    } else if (g.slug === "mainframe" || g.slug === "rete") {
+      // giochi in verticale: della cartuccia si mostra la parte alta (mainframe e prime travi; area di rigore)
+      await page.setViewportSize({ width: 640, height: g.slug === "rete" ? 960 : 854 });
       await page.waitForTimeout(300);
-      await page.screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72, clip: { x: 0, y: 53, width: 640, height: 360 } });
+      await page.screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72, clip: { x: 0, y: g.slug === "rete" ? 0 : 53, width: 640, height: 360 } });
       await page.setViewportSize({ width: 640, height: 360 });
     } else {
       await page.screenshot({ path: `anteprime/${g.slug}.jpg`, type: "jpeg", quality: 72 });
